@@ -56,7 +56,9 @@ def terms(deadline=NOW + 3600):
 def scenario(direct_vm, direct_deploy, direct_alice, direct_bob):
     mock_source(direct_vm)
     mock_verdict(direct_vm)
-    contract = direct_deploy("contracts/contrary.py")
+    # gltest 0.29.2 expects the legacy universal bundle, absent from rc7 assets.
+    # v0.2.16 publishes that bundle and contains the contract's pinned runner.
+    contract = direct_deploy("contracts/contrary.py", sdk_version="v0.2.16")
     direct_vm.sender = direct_alice
     direct_vm.deal(direct_alice, 10**18)
     direct_vm.value = 10**16
