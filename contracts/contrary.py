@@ -6,10 +6,10 @@ import json
 import re
 
 
-VERSION = "contrary.v0.1.1"
+VERSION = "contrary.v0.2.0"
 REVIEW_WINDOW = 600
 MAX_SOURCE_BYTES = 12000
-MAX_ATTEMPTS = 3
+ATTEMPT_PAGE_LIMIT = 50
 
 
 def require(ok: bool, message: str) -> None:
@@ -142,6 +142,7 @@ class Recipient:
 
 class Contrary(gl.Contract):
     claims: TreeMap[str, str]
+    attempts: TreeMap[str, str]
     order: DynArray[str]
     credits: TreeMap[str, u256]
     deposited: u256
@@ -163,6 +164,17 @@ class Contrary(gl.Contract):
     def _save(self, claim: dict) -> None:
         self.claims[claim["id"]] = canonical(claim)
 
+    def _attempt_key(self, claim_id: str, index: int) -> str:
+        return claim_id + ":" + str(index)
+
+    def _attempt(self, claim: dict) -> dict:
+        index = claim["active_attempt"]
+        require(index >= 0, "No active counterexample")
+        return json.loads(self.attempts[self._attempt_key(claim["id"], index)])
+
+    def _save_attempt(self, claim: dict, index: int, attempt: dict) -> None:
+        self.attempts[self._attempt_key(claim["id"], index)] = canonical(attempt)
+
     def _credit(self, recipient: str, amount: int) -> None:
         value = u256(amount)
         self.credits[recipient] = self.credits.get(recipient, u256(0)) + value
@@ -171,7 +183,7 @@ class Contrary(gl.Contract):
 
     @gl.public.view
     def get_config(self) -> dict:
-        return {"version": VERSION, "network_scope": "StudioNet simulated GEN", "review_window_seconds": REVIEW_WINDOW, "max_attempts": MAX_ATTEMPTS, "max_source_bytes": MAX_SOURCE_BYTES, "fee_bps": 0, "admin": None}
+        return {"version": VERSION, "network_scope": "StudioNet simulated GEN", "review_window_seconds": REVIEW_WINDOW, "attempt_page_limit": ATTEMPT_PAGE_LIMIT, "max_source_bytes": MAX_SOURCE_BYTES, "fee_bps": 0, "admin": None}
 
     @gl.public.view
     def get_claim(self, claim_id: str) -> dict:
@@ -184,8 +196,17 @@ class Contrary(gl.Contract):
         rows = []
         for i in range(offset, min(len(self.order), offset + limit)):
             claim = self._claim(self.order[i])
-            rows.append({key: value for key, value in claim.items() if key not in ("source", "attempts")})
+            rows.append({key: value for key, value in claim.items() if key != "source"})
         return rows
+
+    @gl.public.view
+    def get_attempts(self, claim_id: str, offset: int = 0, limit: int = 20) -> list:
+        claim = self._claim(claim_id)
+        count = claim["attempt_count"]
+        integer(offset, 0, count, "offset")
+        integer(limit, 1, ATTEMPT_PAGE_LIMIT, "limit")
+        return [json.loads(self.attempts[self._attempt_key(claim_id, i)])
+                for i in range(offset, min(count, offset + limit))]
 
     @gl.public.view
     def get_accounting(self, address: str) -> dict:
@@ -216,7 +237,7 @@ class Contrary(gl.Contract):
                  "repo": repo, "repository_id": captured["repository_id"], "commit": sha, "path": path,
                  "source": captured["source"], "source_sha256": captured["sha256"], "source_bytes": captured["bytes"],
                  "sponsor": actor(), "reward": str(reward), "created_at": now(), "deadline": deadline,
-                 "status": "OPEN", "attempts": [], "recipient": "", "settled_at": 0}
+                 "status": "OPEN", "attempt_count": 0, "active_attempt": -1, "recipient": "", "settled_at": 0}
         self._save(claim)
         self.order.append(claim_id)
         self.deposited += reward
@@ -225,7 +246,7 @@ class Contrary(gl.Contract):
     @gl.public.write.payable
     def submit_counterexample(self, claim_id: str, sample_input: str, expected: str, alleged_result: str, argument: str) -> None:
         claim = self._claim(claim_id)
-        require(claim["status"] == "OPEN" and now() < claim["deadline"] and len(claim["attempts"]) < MAX_ATTEMPTS, "Claim is not accepting attempts")
+        require(claim["status"] == "OPEN" and now() < claim["deadline"], "Claim is not accepting attempts")
         require(actor() != claim["sponsor"], "Sponsor cannot challenge own claim")
         stake = int(claim["reward"]) // 10
         require(gl.message.value == stake, "Exact ten-percent challenge stake required")
@@ -234,7 +255,10 @@ class Contrary(gl.Contract):
                    "argument": bounded(argument, 1500, "counterexample argument"), "submitted_at": now(),
                    "review_by": now() + 86400, "status": "SUBMITTED", "assessments": [], "rebuttal_used": False,
                    "rebuttal": "", "challenge_until": 0, "finalized_at": 0}
-        claim["attempts"].append(attempt)
+        index = claim["attempt_count"]
+        self._save_attempt(claim, index, attempt)
+        claim["attempt_count"] = index + 1
+        claim["active_attempt"] = index
         claim["status"] = "REVIEW_READY"
         self._save(claim)
         self.deposited += stake
@@ -244,20 +268,21 @@ class Contrary(gl.Contract):
     def review_counterexample(self, claim_id: str) -> None:
         claim = self._claim(claim_id)
         require(claim["status"] == "REVIEW_READY", "No counterexample is awaiting review")
-        attempt = claim["attempts"][-1]
+        attempt = self._attempt(claim)
         require(now() + REVIEW_WINDOW < attempt["review_by"], "Review deadline reached")
         result = assess(claim, attempt, "")
         attempt["assessments"].append({"kind": "initial", "at": now(), "result": result})
         attempt["status"] = "REVIEW_PENDING"
         attempt["challenge_until"] = now() + REVIEW_WINDOW
         claim["status"] = "REVIEW_PENDING"
+        self._save_attempt(claim, claim["active_attempt"], attempt)
         self._save(claim)
 
     @gl.public.write
     def rebut_assessment(self, claim_id: str, statement: str) -> None:
         claim = self._claim(claim_id)
         require(claim["status"] == "REVIEW_PENDING", "No review can be rebutted")
-        attempt = claim["attempts"][-1]
+        attempt = self._attempt(claim)
         require(actor() in (claim["sponsor"], attempt["challenger"]), "Only the parties may rebut")
         require(now() < attempt["challenge_until"] and not attempt["rebuttal_used"], "Rebuttal window closed or already used")
         require(now() + REVIEW_WINDOW < attempt["review_by"], "Review recovery deadline reached")
@@ -267,18 +292,20 @@ class Contrary(gl.Contract):
         attempt["rebuttal"] = statement
         attempt["assessments"].append({"kind": "rebuttal", "at": now(), "result": result})
         attempt["challenge_until"] = now() + REVIEW_WINDOW
-        self._save(claim)
+        self._save_attempt(claim, claim["active_attempt"], attempt)
 
     @gl.public.write
     def finalize(self, claim_id: str) -> None:
         claim = self._claim(claim_id)
         require(claim["status"] == "REVIEW_PENDING", "No reviewed attempt to finalize")
-        attempt = claim["attempts"][-1]
+        attempt = self._attempt(claim)
         require(now() >= attempt["challenge_until"], "Rebuttal window is still open")
         outcome = attempt["assessments"][-1]["result"]["outcome"]
         stake = int(attempt["stake"])
         attempt["status"] = outcome
         attempt["finalized_at"] = now()
+        self._save_attempt(claim, claim["active_attempt"], attempt)
+        claim["active_attempt"] = -1
         if outcome == "PROVEN":
             self._credit(attempt["challenger"], int(claim["reward"]) + stake)
             claim["status"] = "PROVEN"
@@ -287,7 +314,7 @@ class Contrary(gl.Contract):
         else:
             self._credit(claim["sponsor"] if outcome == "REJECTED" else attempt["challenger"], stake)
             claim["status"] = "OPEN"
-            if now() >= claim["deadline"] or len(claim["attempts"]) >= MAX_ATTEMPTS:
+            if now() >= claim["deadline"]:
                 self._credit(claim["sponsor"], int(claim["reward"]))
                 claim["status"] = "CLOSED"
                 claim["recipient"] = claim["sponsor"]
@@ -297,7 +324,7 @@ class Contrary(gl.Contract):
     @gl.public.write
     def close_expired(self, claim_id: str) -> None:
         claim = self._claim(claim_id)
-        require(claim["status"] == "OPEN" and (now() >= claim["deadline"] or len(claim["attempts"]) >= MAX_ATTEMPTS), "Claim cannot close yet")
+        require(claim["status"] == "OPEN" and now() >= claim["deadline"], "Claim cannot close yet")
         self._credit(claim["sponsor"], int(claim["reward"]))
         claim["status"] = "CLOSED"
         claim["recipient"] = claim["sponsor"]
@@ -308,13 +335,15 @@ class Contrary(gl.Contract):
     def recover_unreviewed(self, claim_id: str) -> None:
         claim = self._claim(claim_id)
         require(claim["status"] == "REVIEW_READY", "Only an unreviewed attempt can be recovered")
-        attempt = claim["attempts"][-1]
+        attempt = self._attempt(claim)
         require(now() >= attempt["review_by"], "Review deadline has not arrived")
         attempt["status"] = "UNREVIEWED"
         attempt["finalized_at"] = now()
+        self._save_attempt(claim, claim["active_attempt"], attempt)
+        claim["active_attempt"] = -1
         self._credit(attempt["challenger"], int(attempt["stake"]))
         claim["status"] = "OPEN"
-        if now() >= claim["deadline"] or len(claim["attempts"]) >= MAX_ATTEMPTS:
+        if now() >= claim["deadline"]:
             self._credit(claim["sponsor"], int(claim["reward"]))
             claim["status"] = "CLOSED"
             claim["recipient"] = claim["sponsor"]

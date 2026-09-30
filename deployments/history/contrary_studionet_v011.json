@@ -1,21 +1,21 @@
 {
   "network": "StudioNet",
   "chainId": 61999,
-  "version": "contrary.v0.2.0",
-  "address": "0xce7F96AFFCC1edA8dCAa57D5fB14fD658C96Ca64",
-  "deployTransaction": "0xa04ba692c29c5ca8c43a26dac3b5e3bc6a856cfd01755c288a178a8faf870b5c",
+  "version": "contrary.v0.1.1",
+  "address": "0x6Ab82dF1c856E782b267851D0c28dB21A68608B1",
+  "deployTransaction": "0x4e464c45c9183c810f5724cc1655f9225fec954a8c0c2bbd6a6c4e9fd0c326bc",
   "deployStatus": "FINALIZED",
   "executionResult": "SUCCESS",
-  "sourceSha256": "aa4a51fb0906700fb54ffc91a32468bd92d92d9e4c13abe11ddee0caefbfcaad",
+  "sourceSha256": "5eb9b2dd7d8aff14c015da4bf833aed338db670452ddf2654e3e2f4b7f18e3d1",
   "onchainSourceHashMatched": true,
   "configReadback": {
     "admin": null,
     "fee_bps": 0,
-    "attempt_page_limit": 50,
+    "max_attempts": 3,
     "max_source_bytes": 12000,
     "network_scope": "StudioNet simulated GEN",
     "review_window_seconds": 600,
-    "version": "contrary.v0.2.0"
+    "version": "contrary.v0.1.1"
   },
   "testAccounts": {
     "sponsor": "0x075Ea661Cb536effDa8a0582308c6FCa5422571A",

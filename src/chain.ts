@@ -2,7 +2,7 @@ import type {createClient} from 'genlayer-js';
 import {TransactionHashVariant,type Hash} from 'genlayer-js/types';
 import type {Deployment} from './model.ts';
 
-export interface Provider{request(args:{method:string;params?:unknown[]}):Promise<unknown>;providers?:Provider[];isMetaMask?:boolean}
+export interface Provider{request(args:{method:string;params?:unknown[]}):Promise<unknown>;providers?:Provider[];isMetaMask?:boolean;on?(event:string,listener:(value:unknown)=>void):void;removeListener?(event:string,listener:(value:unknown)=>void):void}
 export type WalletOption={info:{uuid:string;name:string};provider:Provider};
 export type Session={address:`0x${string}`;provider:Provider};
 export type Pending={hash:`0x${string}`;method:string;claimId:string;account:string;address:string;submittedAt:number};
@@ -39,9 +39,9 @@ export async function read<T>(deployment:Deployment,method:string,args:unknown[]
  return JSON.parse(JSON.stringify(value,(_,v)=>typeof v==='bigint'?v.toString():v)) as T;
 }
 export async function verifyDeployment(deployment:Deployment){
- if(!deployment.verified||!/^0x[0-9a-fA-F]{40}$/.test(deployment.address||'')||deployment.chainId!==61999||deployment.network!=='studionet'||deployment.version!=='contrary.v0.1.1'||!/^\w{64}$/.test(deployment.sourceSha256))throw Error('Live signing is unavailable until the contract is verified.');
- const config=await read<{version:string;review_window_seconds:number;max_attempts:number;fee_bps:number}>(deployment,'get_config');
- if(config.version!==deployment.version||config.review_window_seconds!==600||config.max_attempts!==3||config.fee_bps!==0)throw Error('The on-chain policy does not match this release.');
+ if(!deployment.verified||!/^0x[0-9a-fA-F]{40}$/.test(deployment.address||'')||deployment.chainId!==61999||deployment.network!=='studionet'||deployment.version!=='contrary.v0.2.0'||!/^\w{64}$/.test(deployment.sourceSha256))throw Error('Live signing is unavailable until the contract is verified.');
+ const config=await read<{version:string;review_window_seconds:number;attempt_page_limit:number;fee_bps:number}>(deployment,'get_config');
+ if(config.version!==deployment.version||config.review_window_seconds!==600||config.attempt_page_limit!==50||config.fee_bps!==0)throw Error('The on-chain policy does not match this release.');
  const code=await(await getReader()).getContractCode(deployment.address as `0x${string}`);
  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(code.replaceAll('\r\n','\n')));
  const hash=[...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -59,7 +59,35 @@ export function receiptOutcome(receipt:unknown):'pending'|'success'|'error'{
  if(['ERROR','FAILURE','VM_ERROR'].includes(result)||normalized==='FINISHED_WITH_ERROR')return'error';
  return result==='SUCCESS'||normalized==='FINISHED_WITH_RETURN'?'success':'pending';
 }
-export async function checkPending(pending:Pending){const receipt=await(await getReader()).getTransaction({hash:pending.hash as Hash});const outcome=receiptOutcome(receipt);if(outcome!=='pending'){const saved=loadPending();if(saved?.hash===pending.hash)localStorage.removeItem(pendingKey);if(memoryPending?.hash===pending.hash)memoryPending=null;}return outcome;}
+export function withdrawTransferOutcome(parent:unknown,child:unknown,pending:Pending):'pending'|'success'|'transfer_error'{
+ const source=parent as Record<string,unknown>,transfer=child as Record<string,unknown>|null;
+ const hashes=source.triggeredTransactions??source.triggered_transactions;
+ if(!Array.isArray(hashes)||hashes.length!==1||!isHash(hashes[0]))return'transfer_error';
+ if(!transfer)return'pending';
+ const status=String(transfer.statusName??transfer.status_name??transfer.status??'').toUpperCase();
+ if(['CANCELED','CANCELLED','DROPPED'].includes(status))return'transfer_error';
+ if(status!=='FINALIZED')return'pending';
+ const from=String(transfer.fromAddress??transfer.from_address??transfer.from??'').toLowerCase();
+ const to=String(transfer.toAddress??transfer.to_address??transfer.to??'').toLowerCase();
+ const credited=transfer.valueCredited??transfer.value_credited;
+ const value=transfer.value;
+ let positiveValue=false;
+ try{positiveValue=value!==undefined&&BigInt(String(value))>0n;}catch{return'transfer_error';}
+ return credited===true&&from===pending.address.toLowerCase()&&to===pending.account.toLowerCase()&&positiveValue?'success':'transfer_error';
+}
+export async function checkPending(pending:Pending){
+ const client=await getReader(),receipt=await client.getTransaction({hash:pending.hash as Hash});
+ let outcome:ReturnType<typeof receiptOutcome>|'transfer_error'=receiptOutcome(receipt);
+ if(outcome==='success'&&pending.method==='withdraw'){
+  const record=receipt as unknown as Record<string,unknown>;
+  const hashes=record.triggeredTransactions??record.triggered_transactions;
+  if(Array.isArray(hashes)&&hashes.length===1&&isHash(hashes[0])){
+   try{const child=await client.getTransaction({hash:hashes[0] as Hash});outcome=withdrawTransferOutcome(receipt,child,pending);}catch{outcome='pending';}
+  }else outcome='transfer_error';
+ }
+ if(outcome!=='pending'){const saved=loadPending();if(saved?.hash===pending.hash)localStorage.removeItem(pendingKey);if(memoryPending?.hash===pending.hash)memoryPending=null;}
+ return outcome;
+}
 function message(error:unknown){const record=error as {message?:unknown;code?:number};if(record?.code===4001)return'Wallet request rejected.';if(record?.code===-32002)return'A wallet request is already open. Resolve it before trying again.';return typeof record?.message==='string'?record.message.slice(0,400):'Wallet or network request failed.';}
 export async function send(deployment:Deployment,session:Session,method:string,args:unknown[],value:bigint,onPending:(pending:Pending)=>void){
  const counts:Record<string,number>={create_claim:1,submit_counterexample:5,review_counterexample:1,rebut_assessment:2,finalize:1,close_expired:1,recover_unreviewed:1,withdraw:0};

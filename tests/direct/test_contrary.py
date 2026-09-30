@@ -9,6 +9,8 @@ def test_source_snapshot_and_terms_are_frozen(scenario):
     assert claim["source"] == SOURCE
     assert claim["sponsor"] == addr(sponsor).lower()
     assert claim["status"] == "OPEN"
+    assert claim["attempt_count"] == 0
+    assert contract.get_attempts(CLAIM_ID) == []
     assert "source" not in contract.list_claims()[0]
     assert contract.get_accounting(addr(sponsor))["locked"] == str(10**16)
 
@@ -24,10 +26,10 @@ def test_proven_counterexample_pays_fixed_amount_after_window(direct_vm, scenari
     contract.finalize(CLAIM_ID)
     claim = contract.get_claim(CLAIM_ID)
     assert claim["status"] == "PROVEN"
-    assert claim["attempts"][0]["assessments"][0]["result"]["outcome"] == "PROVEN"
+    assert contract.get_attempts(CLAIM_ID)[0]["assessments"][0]["result"]["outcome"] == "PROVEN"
     assert contract.get_accounting(addr(challenger))["claimable"] == str(11 * 10**15)
     assert contract.get_accounting(addr(sponsor))["claimable"] == "0"
-    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v0.1.1" and hasattr(m, "Recipient"))
+    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v0.2.0" and hasattr(m, "Recipient"))
     transfers = []
     class CaptureRecipient:
         def __init__(self, address):
@@ -59,7 +61,44 @@ def test_rejected_attempt_credits_stake_but_allows_next_challenger(direct_vm, sc
     direct_vm.sender = challenger
     direct_vm.value = 10**15
     contract.submit_counterexample(CLAIM_ID, "name = 'x'", "False", "True", "Second attempt")
-    assert len(contract.get_claim(CLAIM_ID)["attempts"]) == 2
+    assert contract.get_claim(CLAIM_ID)["attempt_count"] == 2
+    assert len(contract.get_attempts(CLAIM_ID)) == 2
+
+
+def test_failed_attempts_cannot_exhaust_challenge_slots(direct_vm, scenario):
+    contract, sponsor, challenger = scenario
+    for index in range(4):
+        direct_vm.warp(iso(NOW + index * 700))
+        direct_vm.sender = challenger
+        submit(direct_vm, scenario)
+        direct_vm.clear_mocks()
+        mock_verdict(direct_vm, scope="OUT", proof="UNCLEAR", quote="")
+        contract.review_counterexample(CLAIM_ID)
+        direct_vm.warp(iso(NOW + index * 700 + 601))
+        contract.finalize(CLAIM_ID)
+    assert contract.get_claim(CLAIM_ID)["status"] == "OPEN"
+    assert contract.get_claim(CLAIM_ID)["attempt_count"] == 4
+    assert len(contract.get_attempts(CLAIM_ID, 2, 2)) == 2
+    assert contract.get_accounting(addr(sponsor))["claimable"] == str(4 * 10**15)
+    assert contract.get_accounting(addr(sponsor))["locked"] == str(10**16)
+
+
+def test_attempt_paging_and_one_active_attempt(direct_vm, scenario):
+    contract, sponsor, challenger = scenario
+    submit(direct_vm, scenario)
+    direct_vm.sender = challenger
+    direct_vm.value = 10**15
+    with direct_vm.expect_revert("Claim is not accepting attempts"):
+        contract.submit_counterexample(CLAIM_ID, "another", "False", "True", "Cannot overlap")
+    direct_vm.value = 0
+    with direct_vm.expect_revert("Invalid limit"):
+        contract.get_attempts(CLAIM_ID, 0, 51)
+    with direct_vm.expect_revert("Invalid offset"):
+        contract.get_attempts(CLAIM_ID, 2, 1)
+    assert contract.get_attempts(CLAIM_ID, 1, 20) == []
+    direct_vm.sender = sponsor
+    with direct_vm.expect_revert("Claim cannot close yet"):
+        contract.close_expired(CLAIM_ID)
 
 
 def test_inconclusive_returns_stake_and_expiry_returns_reward(direct_vm, scenario):
@@ -85,7 +124,7 @@ def test_rebuttal_preserves_both_assessments(direct_vm, scenario):
     direct_vm.clear_mocks()
     mock_verdict(direct_vm, scope="IN", proof="UNCLEAR", quote="")
     contract.rebut_assessment(CLAIM_ID, "The source is not sufficient to establish runtime behavior.")
-    reviews = contract.get_claim(CLAIM_ID)["attempts"][0]["assessments"]
+    reviews = contract.get_attempts(CLAIM_ID)[0]["assessments"]
     assert [r["result"]["outcome"] for r in reviews] == ["PROVEN", "INCONCLUSIVE"]
     with direct_vm.expect_revert("Rebuttal window closed or already used"):
         contract.rebut_assessment(CLAIM_ID, "Again")
@@ -99,7 +138,7 @@ def test_unreviewed_attempt_refunds_stake_without_proven_verdict(direct_vm, scen
     submit(direct_vm, scenario)
     direct_vm.warp(iso(NOW + 86401))
     contract.recover_unreviewed(CLAIM_ID)
-    assert contract.get_claim(CLAIM_ID)["attempts"][0]["status"] == "UNREVIEWED"
+    assert contract.get_attempts(CLAIM_ID)[0]["status"] == "UNREVIEWED"
     assert contract.get_accounting(addr(challenger))["claimable"] == str(10**15)
     assert contract.get_accounting(addr(sponsor))["claimable"] == str(10**16)
 
@@ -127,9 +166,9 @@ def test_bad_quote_cannot_be_proven(direct_vm, scenario):
 
 def test_validator_recomputes_decision_and_rejects_forged_outcome(direct_vm, scenario, monkeypatch):
     contract = submit(direct_vm, scenario)
-    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v0.1.1" and hasattr(m, "assess"))
+    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v0.2.0" and hasattr(m, "assess"))
     claim = contract.get_claim(CLAIM_ID)
-    attempt = claim["attempts"][0]
+    attempt = contract.get_attempts(CLAIM_ID)[0]
     def simulate(leader, validator):
         wrong = {"scope": "OUT", "proof": "UNCLEAR", "quote": "", "reason": "False assertion", "outcome": "REJECTED"}
         assert validator(module.gl.vm.Return(wrong)) is False

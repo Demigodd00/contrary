@@ -75,7 +75,7 @@ else if(command==='bind'){
  const actual=crypto.createHash('sha256').update(code.replaceAll('\r\n','\n')).digest('hex');
  if(actual!==state.sourceSha256)throw Error('On-chain source mismatch');
  const config=await clients.sponsor.readContract({address,functionName:'get_config',args:[],transactionHashVariant:TransactionHashVariant.LATEST_FINAL});
- if(config.version!=='contrary.v0.1.1'||config.review_window_seconds!==600||config.max_attempts!==3||config.fee_bps!==0)throw Error('On-chain policy mismatch');
+ if(config.version!=='contrary.v0.2.0'||config.review_window_seconds!==600||config.attempt_page_limit!==50||config.fee_bps!==0)throw Error('On-chain policy mismatch');
  state.address=address;state.config=config;state.accounts=accounts;state.schema=await clients.sponsor.getContractSchema(address);save();
  show({address,sourceSha256:actual,config,deployHash:state.deployHash});
 }
@@ -97,6 +97,7 @@ else if(command==='close')await send('observer','close_expired',[args[0]||'CT-LI
 else if(command==='recover')await send('observer','recover_unreviewed',[args[0]||'CT-LIVE-EMPTY-001']);
 else if(command==='withdraw')await send(args[0]||'challenger','withdraw',[]);
 else if(command==='claim')show(await read('get_claim',[args[0]||'CT-LIVE-EMPTY-001']));
+else if(command==='attempts')show(await read('get_attempts',[args[0]||'CT-LIVE-EMPTY-001',Number(args[1]||0),Number(args[2]||20)]));
 else if(command==='accounting'){
  const rows={};for(const [role,address] of Object.entries(accounts))rows[role]=await read('get_accounting',[address]);show(rows);
 }
