@@ -1,0 +1,37 @@
+{
+  "network": "StudioNet",
+  "chainId": 61999,
+  "contract": "0x6Ab82dF1c856E782b267851D0c28dB21A68608B1",
+  "claimId": "CT-LIVE-EMPTY-002",
+  "fixtureCommit": "e88ec082d060a441f1b01599ad65f5f2ec2f8cb2",
+  "fixturePath": "examples/validator.py",
+  "fixtureSha256": "e57c2c084bf832df160aeeff4c393298e75e576ad068fa30bf5357c7459254ac",
+  "simulatedGEN": true,
+  "sponsor": "0x075Ea661Cb536effDa8a0582308c6FCa5422571A",
+  "challenger": "0x9EFC79F46D547B63F2cC81a50C202D1a268E8E6a",
+  "observer": "0x33258F8d63283A2ec6EC3f330084886d165a503f",
+  "transactions": {
+    "createClaim": "0x0f52bef95982b59631ee4d4799da9d7ee6be8e7948825fbfe8024a052719bc69",
+    "submitCounterexample": "0xb1e43ada647b0d12f673f6585c2698c38232ed4997bf93bd8ec19fc9d9a40a79",
+    "initialReview": "0x29dcc571bd02ee9a32c6727ca2d80aa95669fd5e0779b37bf6183e5d228a7901",
+    "sponsorRebuttal": "0xae0d0fd0659418b08bdebdaaadf3c8ab3b24b52ffa84a80eae712119571b8952",
+    "finalize": "0x8fcf8182e3d5fb518c11a173cba49934ced5b176dce5f249ece903470f1c8571",
+    "withdraw": "0x50382bd1602e07a1e21f33fd94b4d9089d349b8d9ced7ba1da37b404f83bb059",
+    "triggeredTransfer": "0xecd0ca52f1f44252b4b2f9dab54b4ad0cba904f6f669ca3324e6557065b5f9fd"
+  },
+  "finalResults": {
+    "claimStatus": "PROVEN",
+    "initialAssessment": "PROVEN",
+    "rebuttalAssessment": "PROVEN",
+    "exactQuote": "if name == \"\":\n        return True",
+    "rewardWei": "10000000000000000",
+    "stakeWei": "1000000000000000",
+    "withdrawnWei": "11000000000000000",
+    "transferFinalized": true,
+    "transferValueCredited": true,
+    "transferRecipient": "0x9EFC79F46D547B63F2cC81a50C202D1a268E8E6a",
+    "claimableAfterWithdrawalWei": "0",
+    "contractLockedAfterSettlementWei": "0"
+  },
+  "limitations": "Rejected, inconclusive, expiry and unreviewed paths were direct-tested only; production browser wallet signing was not independently verified."
+}

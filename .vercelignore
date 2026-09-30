@@ -1,0 +1,9 @@
+.local/
+.env
+.env.*
+artifacts/
+tests/
+docs/
+deployments/
+scripts/
+.git/

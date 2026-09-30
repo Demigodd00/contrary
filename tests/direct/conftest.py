@@ -38,7 +38,7 @@ def clock(direct_vm):
 
 def mock_source(vm, source=SOURCE):
     vm.mock_web("^" + re.escape("https://api.github.com/repos/" + REPO) + "$", {"status": 200, "body": json.dumps({"id": 42, "private": False, "full_name": REPO})})
-    vm.mock_web("^" + re.escape("https://api.github.com/repos/" + REPO + "/commits/" + SHA) + "$", {"status": 200, "body": json.dumps({"sha": SHA})})
+    vm.mock_web("^" + re.escape("https://api.github.com/repos/" + REPO + "/git/commits/" + SHA) + "$", {"status": 200, "body": json.dumps({"sha": SHA})})
     vm.mock_web("^" + re.escape("https://raw.githubusercontent.com/" + REPO + "/" + SHA + "/src/validator.py") + "$", {"status": 200, "body": source})
 
 

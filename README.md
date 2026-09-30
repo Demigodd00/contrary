@@ -6,7 +6,7 @@ The first release covers claims whose behavior can be inferred from **one comple
 
 ## Status
 
-Contract and app source are implemented in this dedicated [public repository](https://github.com/Demigodd00/contrary). Direct tests and the frontend build pass. StudioNet deployment, live validator acceptance, and a hosted release are tracked separately in [the release checklist](docs/RELEASE.md). The frontend disables wallet actions until `/deployment.json` identifies a verified contract. Do not treat the local test fixtures as live GenLayer evidence.
+Contrary is live at [contrary-inky.vercel.app](https://contrary-inky.vercel.app/) and has its own [public repository](https://github.com/Demigodd00/contrary). The canonical StudioNet contract is [`0x6Ab82dF1c856E782b267851D0c28dB21A68608B1`](https://explorer-studio.genlayer.com/address/0x6Ab82dF1c856E782b267851D0c28dB21A68608B1). A two-wallet live flow covered claim creation, challenge, validator review, sponsor rebuttal, finalization and a credited withdrawal transfer. The [release checklist](docs/RELEASE.md) distinguishes that live proof from branches exercised only in direct tests. The frontend blocks wallet actions unless `/deployment.json` identifies the verified contract and its deployed source matches.
 
 ## Local checks
 
@@ -35,7 +35,7 @@ If an attempt cannot be reviewed within 24 hours, anyone can mark it unreviewed 
 - `contracts/contrary.py`: Intelligent Contract and validator comparison.
 - `src/`: public Vite/React interface and wallet client.
 - `tests/direct/`: deterministic state, accounting, evidence and independent-validator checks. Direct mode does not prove live network consensus.
-- `examples/validator.py`: bounded public fixture for a future StudioNet review.
+- `examples/validator.py`: bounded public fixture used in the StudioNet acceptance flow.
 - `docs/ARCHITECTURE.md`: trust and settlement boundaries.
 - `docs/RELEASE.md`: deployment, live verification, and submission gates.
 - `deployments/`: deployment identities and live acceptance records after verification.

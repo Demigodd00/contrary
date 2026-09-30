@@ -27,7 +27,7 @@ def test_proven_counterexample_pays_fixed_amount_after_window(direct_vm, scenari
     assert claim["attempts"][0]["assessments"][0]["result"]["outcome"] == "PROVEN"
     assert contract.get_accounting(addr(challenger))["claimable"] == str(11 * 10**15)
     assert contract.get_accounting(addr(sponsor))["claimable"] == "0"
-    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v0.1.0" and hasattr(m, "Recipient"))
+    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v0.1.1" and hasattr(m, "Recipient"))
     transfers = []
     class CaptureRecipient:
         def __init__(self, address):
@@ -127,7 +127,7 @@ def test_bad_quote_cannot_be_proven(direct_vm, scenario):
 
 def test_validator_recomputes_decision_and_rejects_forged_outcome(direct_vm, scenario, monkeypatch):
     contract = submit(direct_vm, scenario)
-    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v0.1.0" and hasattr(m, "assess"))
+    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v0.1.1" and hasattr(m, "assess"))
     claim = contract.get_claim(CLAIM_ID)
     attempt = claim["attempts"][0]
     def simulate(leader, validator):

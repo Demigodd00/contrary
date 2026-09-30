@@ -1,0 +1,11 @@
+{
+  "network": "StudioNet",
+  "version": "contrary.v0.1.0",
+  "address": "0x9bac4f55dC3D2a1b7ac4f5Aee965214439229b6c",
+  "deployTransaction": "0x634a0243b7e4d8318a149d136c0689a76df273403151827d35c502178e391a30",
+  "sourceSha256": "3732239e963c87dd63b32ae85b9b1cdade1fcba0a6a9442d93bd891108938012",
+  "failedClaimTransaction": "0xca6811d64f67946d0a9ab02b61d640e4364bc9b7263c7a8b28974c6816777154",
+  "failedClaimExecution": "ERROR",
+  "cause": "GitHub commit detail response was 114361 bytes, above the 100000-byte contract limit. The v0.1.1 source uses the compact Git commit-object endpoint. No claim was created by this failed execution.",
+  "canonical": false
+}

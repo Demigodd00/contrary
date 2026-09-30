@@ -7,11 +7,16 @@
 - Direct state and accounting tests, including forged-verdict rejection.
 - Frontend TypeScript/Vite production build.
 
-## Required before a public submission
+## Live StudioNet acceptance
 
-1. Push this repository, including the public source fixture, with no secrets.
-2. Deploy the exact contract source to GenLayer StudioNet. Record full deployment transaction hash, execution result, address, chain ID, source hash, version and ABI.
-3. Verify `get_config`, deployed source and read calls from an independent reader. Write the verified identity to `public/deployment.json` and a detailed record under `deployments/`.
-4. Run a live two-wallet flow: create a bounded claim against `examples/validator.py` at the published commit, submit the empty-name counterexample, obtain a validator verdict, wait the rebuttal window, finalize, withdraw, and verify the outbound transfer receipt. Also test rejected, inconclusive and unreviewed/expiry paths as feasible, distinguishing live results from local tests.
-5. Publish the frontend and verify anonymous access, mobile layout, wallet connection, every read/write path and exact production contract identity. Record the hosting URL and release commit.
-6. Review steward-facing claims and evidence. Do not call the app complete or submission-ready before the live and public gates pass.
+- Exact v0.1.1 contract deployed on chain 61999; finalized-success deployment, source-hash readback, ABI and `get_config` verified. See [`deployments/contrary_studionet.json`](../deployments/contrary_studionet.json).
+- Public fixture pinned to commit `e88ec082d060a441f1b01599ad65f5f2ec2f8cb2`. Live claim `CT-LIVE-EMPTY-002` was created with 0.01 simulated GEN; another wallet staked 0.001 GEN and demonstrated that the empty-string branch returns `True`.
+- GenLayer validators returned `PROVEN` with an exact source quote. A sponsor rebuttal caused a second independent assessment, also `PROVEN`. Both remain visible. After the window, finalization credited 0.011 GEN to the challenger. The withdrawal and its triggered transfer finalized; the transfer's `value_credited` was true. Full transaction hashes and state checks are in [`deployments/acceptance_studionet.json`](../deployments/acceptance_studionet.json).
+- [Public app](https://contrary-inky.vercel.app/?claim=CT-LIVE-EMPTY-002) and `/deployment.json` returned HTTP 200 without sign-in. The claim, frozen source and both assessments loaded in an anonymous browser. Narrow-width layout was inspected. Frontend production build passed.
+
+## Honest remaining boundaries
+
+- Rejected, inconclusive, unreviewed and expiry/refund branches have direct tests, not live multi-wallet acceptance records. Do not describe those as live-verified.
+- Browser wallet signing was not independently exercised on the production URL; the live writes used dedicated StudioNet test accounts through the documented operator script. A reviewer should connect their own StudioNet wallet for a full UI write check.
+- This version assesses static claims about one complete source file. It does not execute code or verify cross-file/runtime behavior. Validator consensus and exact citations reduce but do not eliminate false assessments or prompt-injection risk. The protocol is experimental and unaudited.
+- This is simulated StudioNet GEN only. No real-money or production-network claim is made.

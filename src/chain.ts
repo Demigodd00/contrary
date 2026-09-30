@@ -39,7 +39,7 @@ export async function read<T>(deployment:Deployment,method:string,args:unknown[]
  return JSON.parse(JSON.stringify(value,(_,v)=>typeof v==='bigint'?v.toString():v)) as T;
 }
 export async function verifyDeployment(deployment:Deployment){
- if(!deployment.verified||!/^0x[0-9a-fA-F]{40}$/.test(deployment.address||'')||deployment.chainId!==61999||deployment.network!=='studionet'||deployment.version!=='contrary.v0.1.0'||!/^\w{64}$/.test(deployment.sourceSha256))throw Error('Live signing is unavailable until the contract is verified.');
+ if(!deployment.verified||!/^0x[0-9a-fA-F]{40}$/.test(deployment.address||'')||deployment.chainId!==61999||deployment.network!=='studionet'||deployment.version!=='contrary.v0.1.1'||!/^\w{64}$/.test(deployment.sourceSha256))throw Error('Live signing is unavailable until the contract is verified.');
  const config=await read<{version:string;review_window_seconds:number;max_attempts:number;fee_bps:number}>(deployment,'get_config');
  if(config.version!==deployment.version||config.review_window_seconds!==600||config.max_attempts!==3||config.fee_bps!==0)throw Error('The on-chain policy does not match this release.');
  const code=await(await getReader()).getContractCode(deployment.address as `0x${string}`);

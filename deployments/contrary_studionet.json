@@ -1,0 +1,26 @@
+{
+  "network": "StudioNet",
+  "chainId": 61999,
+  "version": "contrary.v0.1.1",
+  "address": "0x6Ab82dF1c856E782b267851D0c28dB21A68608B1",
+  "deployTransaction": "0x4e464c45c9183c810f5724cc1655f9225fec954a8c0c2bbd6a6c4e9fd0c326bc",
+  "deployStatus": "FINALIZED",
+  "executionResult": "SUCCESS",
+  "sourceSha256": "5eb9b2dd7d8aff14c015da4bf833aed338db670452ddf2654e3e2f4b7f18e3d1",
+  "onchainSourceHashMatched": true,
+  "configReadback": {
+    "admin": null,
+    "fee_bps": 0,
+    "max_attempts": 3,
+    "max_source_bytes": 12000,
+    "network_scope": "StudioNet simulated GEN",
+    "review_window_seconds": 600,
+    "version": "contrary.v0.1.1"
+  },
+  "testAccounts": {
+    "sponsor": "0x075Ea661Cb536effDa8a0582308c6FCa5422571A",
+    "challenger": "0x9EFC79F46D547B63F2cC81a50C202D1a268E8E6a",
+    "observer": "0x33258F8d63283A2ec6EC3f330084886d165a503f"
+  },
+  "scope": "StudioNet simulated GEN only; public keys are disposable test accounts, private keys remain ignored locally."
+}

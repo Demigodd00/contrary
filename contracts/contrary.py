@@ -6,7 +6,7 @@ import json
 import re
 
 
-VERSION = "contrary.v0.1.0"
+VERSION = "contrary.v0.1.1"
 REVIEW_WINDOW = 600
 MAX_SOURCE_BYTES = 12000
 MAX_ATTEMPTS = 3
@@ -81,7 +81,8 @@ def capture(repo: str, sha: str, path: str) -> str:
     base = "https://api.github.com/repos/" + repo
     try:
         metadata = json.loads(fetch(base, 20000))
-        commit = json.loads(fetch(base + "/commits/" + sha, 100000))
+        # The Git commit-object endpoint omits the unbounded diff/file list.
+        commit = json.loads(fetch(base + "/git/commits/" + sha, 20000))
     except gl.vm.UserError:
         raise
     except Exception:
