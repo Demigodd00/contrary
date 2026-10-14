@@ -1,0 +1,37 @@
+# Contrary milestone v1 — Versioned Counterexample Ledger
+
+Status: local implementation and mocked direct tests only. **Not deployed, live-tested, or submitted.** The accepted v0.2 contract and website remain the public baseline. The milestone uses a new contract instance; v0.2 on-chain claims are not silently migrated into it.
+
+## What changes
+
+The original app asks whether a frozen public-code claim has a counterexample. This milestone makes a *proven* counterexample persist as a versioned repair obligation. A sponsor opens a ledger from a finalized PROVEN claim on the **v1 contract**, optionally attaches up to three more proven claims with the same sponsor, repository identity, source file, commit, statement, scope and exclusions, then proposes a source revision. The first revision seals the witness set permanently. Each revision is a direct-child Git commit of its selected baseline or finalized parent, in the same public repository and file. The contract captures the full revised file (at most 12 KB) and its SHA-256 through strict agreement over GitHub metadata and source retrieval.
+
+For each frozen witness, anyone can request a GenLayer validator assessment of the unchanged concrete input against the new source. Validators independently compare the exact result fields: `STILL_BREAKS`, `CLEARED`, or `UNCLEAR`, plus a decisive 1-based source line (0 for unclear). The contract stores the resulting quote from its already-frozen source, not from model-authored text. If every witness is `CLEARED`, anyone can finalize the revision as `KNOWN_CASES_CLEARED`; otherwise it is `BLOCKED`. Unchecked witnesses become `UNCLEAR` after 24 hours, so a stalled check can never create a false clearance. Every prior assessment and revision remains readable. A sibling branch does not inherit another branch's clearance.
+
+This is a new GenLayer workflow, not a UI-only history view: GitHub retrieval uses `gl.nondet.web.get` and `gl.eq_principle.strict_eq`, semantic revision checks use `gl.nondet.exec_prompt` with independent validator reruns, and deterministic contract code owns eligibility, parentage, timeouts and the final status. No model decides payments or recipients. Ledger operations transfer no GEN; the original claim bounty and withdrawal logic remains separate.
+
+The accepted Project's steward noted that the original payout-driving citation and reasoning were not themselves consensus-bound. The v1 original-claim assessment now compares the **entire** normalized decision, including the exact source citation, across leader and validators; the displayed reason is generated deterministically from the agreed outcome. The new revision check likewise compares both status and cited line, and derives its displayed quote from the frozen source. This closes a field-comparison gap; it does not make a model interpretation objectively correct.
+
+## Exact assurance and limits
+
+`KNOWN_CASES_CLEARED` means only that validators judged **all frozen, previously proven inputs in that ledger** cleared for **that revision** under the unchanged single-file claim. It does not mean a universal bug fix, security audit, code execution, correct external imports, or that new counterexamples cannot exist. Source comments and participant text are untrusted data in the prompt; prompt injection and ambiguous semantics remain real risks. The line citation makes a decision inspectable, but does not mechanically prove the semantic conclusion. A ledger is limited to four witnesses and twelve revisions. A later-discovered witness needs a new ledger; it cannot be added to a sealed one.
+
+The v1 contract starts with fresh storage. Its lineage cannot directly cite the already-live v0.2 claim `CT-V2-EMPTY-001`. A milestone demonstration must first create and finalize at least one *new* proven v1 claim, then run a failing patch and a clearing patch through the ledger. The accepted v0.2 demo and its separate withdrawal proof must remain available on the current website and explorer; publish the milestone frontend at a separate preview URL until the reviewer path for both versions is verified. Do not replace the accepted website's `/deployment.json` with v1 merely to make the ledger clickable.
+
+## Threat model and local tests
+
+- A sponsor cannot rename a claim, remove a witnessed input, or change the pinned source file to obtain clearance. The witness set seals at first revision; parent commit and repository identity are checked.
+- A revision with one fixed input and one still-broken input is `BLOCKED`. A parallel sibling revision is checked independently. Unclear or timed-out checks also block clearance.
+- Invalid GitHub responses, unavailable or oversized files, non-UTF-8 bytes, replayed checks and duplicate witness IDs fail rather than certify.
+- A forged leader result with a changed status, line number or extra field is rejected by the validator callback. The old original-claim assessment now compares the full normalized decision, including its citation; its human-readable reason is deterministic.
+- Direct tests use mocked GitHub and LLM results. They verify contract transitions and validator comparison logic, **not** the live model's ability to identify a genuine repair, wallet behavior, or cross-validator finality.
+
+## Live acceptance gate before any Portal milestone submission
+
+1. Record the exact *last rewarded Project/Milestone commit* from the Portal, and provide a GitHub compare URL from that SHA to the milestone release SHA. The Portal's accepted Contrary submission dated Oct 1, 2026 links to a moving `main` branch rather than pinning a commit. Local history suggests `ab68f62de1a5b8ba7a7aebf13f8098df843d99c4` was the latest commit at submission time, but this is an inference, **not** a Portal-confirmed baseline. Verify it against the submitted snapshot before using it as evidence.
+2. Freeze a concrete source fixture and two claim inputs at a public Git commit. Deploy the v1 source with its pinned GenVM runner to StudioNet. Verify source hash, ABI, `get_config`, chain 61999, and a finalized-success deployment before enabling writes in a separate milestone frontend.
+3. Use two funded StudioNet test wallets to create and prove the claims. Open a ledger, add the second witness, propose a partial direct-child fix, obtain independent live checks (`CLEARED` and `STILL_BREAKS`), and finalize `BLOCKED`. Propose a complete direct-child fix, recheck **both**, then finalize `KNOWN_CASES_CLEARED`. Record each transaction and source hash. Test a third `UNCLEAR` or timeout path if feasible.
+4. Exercise at least one real browser-wallet signing path on the deployed milestone site. Check a fresh visitor can read the full revision graph, frozen sources, per-witness quotes, original assessments and contract explorer links without login. Confirm the accepted v0.2 site and its `CT-V2-EMPTY-001` URL still work.
+5. Update the reviewer guide and evidence with exact direct links, deployment record, hashes, timestamps, costs and honest limitations. Audit failed payable paths in `create_claim` and `submit_counterexample` on StudioNet so a failed call cannot silently strand simulated GEN; if the behavior is unsafe, fix it before asking reviewers to fund claims.
+
+None of these live gates are satisfied by local direct-mode tests. No milestone submission or claim of production readiness should be made until they are completed and checked independently.

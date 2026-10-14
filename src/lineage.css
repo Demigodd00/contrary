@@ -1,0 +1,59 @@
+.lineage-page{max-width:1362px;margin:0 auto;padding:70px 44px 100px}
+.lineage-hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.7fr);gap:42px;align-items:center;padding-bottom:65px}
+.lineage-hero h1{font:600 clamp(48px,5vw,76px)/1.05 'Space Grotesk',sans-serif;letter-spacing:-.075em;margin:18px 0 21px}
+.lineage-hero h1 em{font-style:normal;color:#e66c4a}
+.lineage-hero p{max-width:650px;color:#68766b;font-size:16px;line-height:1.65}
+.lineage-links{display:flex;gap:20px;flex-wrap:wrap;margin-top:26px}
+.lineage-links a,.lineage-revision a{display:inline-flex;align-items:center;gap:5px;color:#406649;font-size:13px;font-weight:700}
+.lineage-invariant{background:#e4efcf;border:1px solid #bdd29e;border-radius:16px;padding:31px;color:#2f5038}
+.lineage-invariant svg{margin-bottom:33px}
+.lineage-invariant strong{display:block;font:600 25px 'Space Grotesk',sans-serif;letter-spacing:-.04em}
+.lineage-invariant p{font-size:14px;line-height:1.55;color:#42634a;margin:11px 0 18px}
+.lineage-invariant small{font-size:11px;color:#687d60}
+.lineage-unreleased,.lineage-error{padding:15px 19px;border-radius:9px;margin-bottom:30px;font-size:13px;line-height:1.55}
+.lineage-unreleased{background:#fff0de;border:1px solid #e5cab0;color:#7a6045}
+.lineage-error{background:#ffe9e5;border:1px solid #e9b8ae;color:#a14439}
+.lineage-heading{display:flex;justify-content:space-between;align-items:end;margin:37px 0 24px;gap:15px}
+.lineage-heading h2{font:600 clamp(31px,3vw,43px) 'Space Grotesk',sans-serif;letter-spacing:-.055em;margin:9px 0 0}
+.lineage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.lineage-card{text-align:left;border:1px solid #dce4d9;background:#fffefa;border-radius:12px;padding:25px;min-height:190px;display:flex;flex-direction:column}
+.lineage-card:hover{box-shadow:0 14px 30px #1d3d2420}
+.lineage-card>span,.lineage-revision-top small{font:500 11px 'DM Mono',monospace;letter-spacing:.11em;color:#b76547}
+.lineage-card h3{font:600 22px 'Space Grotesk',sans-serif;letter-spacing:-.04em;margin:17px 0 10px}
+.lineage-card p,.lineage-card small{color:#667669;font-size:12px;margin:0}
+.lineage-card small{margin-top:auto;overflow-wrap:anywhere}
+.lineage-empty{border:1px dashed #c8d4bf;border-radius:11px;padding:39px;color:#768475;background:#fcfcf7;font-size:14px}
+.lineage-action-card{background:#fffefa;border:1px solid #dde4d8;border-radius:13px;padding:25px;margin:25px 0}
+.lineage-action-card h3{font:600 24px 'Space Grotesk',sans-serif;letter-spacing:-.04em;margin:0 0 7px}
+.lineage-action-card p{font-size:13px;color:#718074;line-height:1.5;max-width:650px}
+.lineage-action-card form{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin-top:20px}
+.lineage-action-card label{display:flex;flex-direction:column;gap:8px;min-width:200px;flex:1;font-size:12px;font-weight:700;color:#47604c}
+.lineage-action-card input,.lineage-action-card select{border:1px solid #d1ddcb;border-radius:7px;background:#fafbf7;padding:12px 13px;width:100%;min-width:0;outline:none;color:#233229}
+.lineage-action-card input:focus,.lineage-action-card select:focus{border-color:#79a46d;box-shadow:0 0 0 3px #e2f0dc}
+.lineage-back{background:none;border:0;color:#486a4f;font-size:13px;padding:0;margin:0 0 23px}
+.lineage-detail{display:flex;justify-content:space-between;gap:20px;border-top:1px solid #dce4d8;padding:30px 0}
+.lineage-detail h2{font:600 35px 'Space Grotesk',sans-serif;letter-spacing:-.05em;margin:10px 0 19px}
+.lineage-detail p{font-size:13px;color:#627365;line-height:1.6;margin-bottom:9px;overflow-wrap:anywhere}
+.lineage-detail a{text-decoration:underline;text-underline-offset:2px}
+.lineage-count{white-space:nowrap;color:#60715f;background:#edf2e7;border-radius:30px;padding:8px 12px;height:max-content;font-size:12px}
+.lineage-revision{background:#fffefa;border:1px solid #dce4d8;border-radius:14px;padding:27px;margin-bottom:18px}
+.lineage-revision-top{display:flex;justify-content:space-between;gap:16px;align-items:start}
+.lineage-revision-top h3{font:600 25px 'Space Grotesk',sans-serif;letter-spacing:-.04em;margin:9px 0 15px}
+.lineage-badge{white-space:nowrap;border-radius:30px;background:#edf0e7;color:#657767;padding:8px 11px;font-size:10px;font-weight:800;letter-spacing:.05em}
+.lineage-badge.clear{background:#dbf2d8;color:#287545}.lineage-badge.blocked{background:#ffe9dd;color:#a65a40}
+.lineage-revision>p{font-size:12px;color:#798579}
+.lineage-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:22px 0}
+.lineage-check{border:1px solid #e0e7dc;border-radius:9px;background:#f9fbf5;padding:18px;min-height:92px}
+.lineage-check>div{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px}
+.lineage-check span{font-size:11px;color:#738372}
+.lineage-check blockquote{margin:17px 0 0;padding:8px 12px;border-left:2px solid #7da464;font:12px/1.5 'DM Mono',monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.lineage-check button,.lineage-revision-bottom button{border:1px solid #9cb791;border-radius:7px;background:#e9f3dd;color:#36533a;padding:10px 12px;font-size:12px;font-weight:700;margin-top:18px;display:inline-flex;align-items:center;gap:7px}
+.lineage-revision-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid #e3e9df;padding-top:18px}
+.lineage-revision-bottom small{font-size:11px;color:#879588}
+.lineage-revision-bottom button{margin:0}
+.lineage-source{border-top:1px solid #e3e9df;margin-top:19px;padding-top:16px;font-size:12px;color:#5e755f}
+.lineage-source summary{cursor:pointer;font-weight:700}
+.lineage-source pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:430px;overflow:auto;padding:18px;border-radius:8px;background:#172a20;color:#eff7e8;font-size:12px;line-height:1.5}
+.lineage-footnote{color:#7b887b;font-size:12px;line-height:1.6;margin:35px 0 0}
+@media(max-width:900px){.lineage-page{padding:50px 25px 70px}.lineage-hero{grid-template-columns:1fr}.lineage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.lineage-page{padding:42px 19px 70px}.lineage-hero h1{font-size:45px}.lineage-grid,.lineage-checks{grid-template-columns:1fr}.lineage-detail,.lineage-revision-top,.lineage-revision-bottom{flex-direction:column}.lineage-badge{align-self:flex-start}.lineage-action-card form{display:block}.lineage-action-card label{margin-bottom:13px}.lineage-action-card button{width:100%}}

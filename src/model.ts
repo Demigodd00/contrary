@@ -5,6 +5,9 @@ export type Attempt={challenger:string;stake:string;sample_input:string;expected
 export type Claim={id:string;title:string;statement:string;scope:string;exclusions:string;repo:string;repository_id:number;commit:string;path:string;source?:string;source_sha256:string;source_bytes:number;sponsor:string;reward:string;created_at:number;deadline:number;status:Status;attempt_count:number;active_attempt:number;attempts?:Attempt[];recipient:string;settled_at:number};
 export type Accounting={deposited:string;locked:string;credited:string;withdrawn:string;claimable:string};
 export type Deployment={verified:boolean;address:string|null;chainId:number;network:'studionet';version:string;sourceSha256:string};
+export type Lineage={id:string;sponsor:string;repo:string;repository_id:number;path:string;base_commit:string;base_source_sha256:string;statement:string;scope:string;exclusions:string;witness_ids:string[];sealed:boolean;revision_count:number;created_at:number};
+export type RevisionCheck={status:'PENDING'|'STILL_BREAKS'|'CLEARED'|'UNCLEAR';line:number;quote:string};
+export type Revision={lineage_id:string;index:number;parent_index:number;parent_commit:string;commit:string;source:string;source_sha256:string;source_bytes:number;witness_ids:string[];checks:RevisionCheck[];status:'CHECKING'|'KNOWN_CASES_CLEARED'|'BLOCKED';proposed_at:number;check_deadline:number;finalized_at:number};
 export function parseGEN(value:string){
  if(!/^\d+(\.\d{1,18})?$/.test(value))throw Error('Enter a GEN amount with at most 18 decimal places.');
  const [whole,fraction='']=value.split('.');const amount=BigInt(whole)*10n**18n+BigInt(fraction.padEnd(18,'0'));

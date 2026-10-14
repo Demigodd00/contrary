@@ -8,6 +8,8 @@ The first release covers claims whose behavior can be inferred from **one comple
 
 Contrary is hosted at [contrary-inky.vercel.app](https://contrary-inky.vercel.app/) and has its own [public repository](https://github.com/Demigodd00/contrary). The canonical StudioNet contract is [`0xce7F96AFFCC1edA8dCAa57D5fB14fD658C96Ca64`](https://explorer-studio.genlayer.com/address/0xce7F96AFFCC1edA8dCAa57D5fB14fD658C96Ca64). A two-wallet v0.2.0 flow covered claim creation, challenge, validator review, sponsor rebuttal, finalization and a credited withdrawal transfer. The [release checklist](docs/RELEASE.md) distinguishes this live proof from paths exercised only in direct tests. The v0.1.1 evidence remains in `deployments/history/` and is not presented as v0.2.0 proof. The frontend blocks wallet actions unless `/deployment.json` identifies the verified contract and its deployed source matches.
 
+A [v1 Versioned Counterexample Ledger milestone](docs/MILESTONE_1.md) is implemented locally with direct-mode tests but is **not deployed or submitted**. The v1 contract requires fresh proven claims on its own deployment; it does not import the v0.2 on-chain example. The accepted v0.2 website and contract remain unchanged while the milestone is verified.
+
 ## Local checks
 
 ```sh
