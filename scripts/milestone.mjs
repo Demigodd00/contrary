@@ -31,7 +31,7 @@ function execution(receipt){
 async function receipt(hash){
  if(!/^0x[0-9a-fA-F]{64}$/.test(hash||''))throw Error('Provide a 32-byte transaction hash');
  const raw=await clients.sponsor.getTransaction({hash});
- const summary={hash,...execution(raw),address:raw.contractAddress??raw.contract_address??null,
+ const summary={hash,...execution(raw),address:raw.contractAddress??raw.contract_address??raw.data?.contract_address??null,
   triggeredTransactions:raw.triggeredTransactions??raw.triggered_transactions??[],valueCredited:raw.valueCredited??raw.value_credited??null};
  show(summary);
 }
@@ -47,13 +47,13 @@ async function bind(kind,address){
  const raw=await clients.sponsor.getTransaction({hash:record.deployHash});
  const outcome=execution(raw);
  if(outcome.status!=='FINALIZED'||outcome.execution!=='SUCCESS')throw Error('Deployment is not FINALIZED + SUCCESS');
- address??=raw.contractAddress??raw.contract_address;
+ address??=raw.contractAddress??raw.contract_address??raw.data?.contract_address;
  if(!/^0x[0-9a-fA-F]{40}$/.test(address||''))throw Error('Verified contract address is required');
  const onchain=await clients.sponsor.getContractCode(address);
  if(sha256(onchain.replaceAll('\r\n','\n'))!==record.sourceSha256)throw Error('Deployed code differs from submitted source');
  const config=kind==='contract'?await clients.sponsor.readContract({address,functionName:'get_config',args:[],transactionHashVariant:TransactionHashVariant.LATEST_FINAL}):null;
  if(kind==='contract'&&(config.version!=='contrary.v1.0.0'||config.max_lineage_witnesses!==4||config.revision_check_window_seconds!==86400))throw Error('Wrong v1 policy');
- record.address=address;record.config=config;record.schema=await clients.sponsor.getContractSchema(address);save();
+ record.address=address;record.config=config;save();
  show({kind,address,sourceSha256:record.sourceSha256,sourceCommit:record.sourceCommit,config});
 }
 async function read(method,params=[]){
@@ -90,6 +90,10 @@ else if(command==='probe-read'){
 }
 else if(command==='deploy')await deploy('contract');
 else if(command==='bind')await bind('contract',args[0]);
+else if(command==='schema'){
+ const kind=args[0]||'contract',record=state[kind];if(!record?.address)throw Error('Bind deployment first');
+ record.schema=await clients.sponsor.getContractSchema(record.address);save();show(record.schema);
+}
 else if(command==='receipt')await receipt(args[0]);
 else if(command==='create'){
  const [claimId,commit]=args;id(claimId,'CT');sha(commit);
