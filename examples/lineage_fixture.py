@@ -8,5 +8,5 @@ def allowed(name: str, mode: str) -> bool:
     if mode == "fast":
         return name != ""
     if mode == "slow":
-        return name == ""
+        return name != ""
     return False
