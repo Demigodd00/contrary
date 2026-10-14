@@ -1,6 +1,21 @@
+import json
 import sys
 
-from conftest import CLAIM_ID, NOW, SOURCE, addr, iso, mock_verdict, submit, terms
+from conftest import CLAIM_ID, NOW, SOURCE, addr, iso, mock_source, mock_verdict, submit, terms
+
+
+def test_source_preparation_has_no_value_at_risk(direct_vm, direct_deploy, direct_alice):
+    mock_source(direct_vm)
+    contract = direct_deploy("contracts/contrary.py", sdk_version="v0.2.16")
+    direct_vm.sender = direct_alice
+    contract.create_claim(json.dumps(terms()))
+    assert contract.get_claim(CLAIM_ID)["status"] == "PREPARED"
+    assert contract.get_claim(CLAIM_ID)["source"] == SOURCE
+    assert contract.get_accounting(addr(direct_alice))["deposited"] == "0"
+    direct_vm.value = 10**16
+    contract.fund_claim(CLAIM_ID)
+    assert contract.get_claim(CLAIM_ID)["status"] == "OPEN"
+    assert contract.get_accounting(addr(direct_alice))["locked"] == str(10**16)
 
 
 def test_source_snapshot_and_terms_are_frozen(scenario):
@@ -29,7 +44,7 @@ def test_proven_counterexample_pays_fixed_amount_after_window(direct_vm, scenari
     assert contract.get_attempts(CLAIM_ID)[0]["assessments"][0]["result"]["outcome"] == "PROVEN"
     assert contract.get_accounting(addr(challenger))["claimable"] == str(11 * 10**15)
     assert contract.get_accounting(addr(sponsor))["claimable"] == "0"
-    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v1.0.0" and hasattr(m, "Recipient"))
+    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v1.1.0" and hasattr(m, "Recipient"))
     transfers = []
     class CaptureRecipient:
         def __init__(self, address):
@@ -88,8 +103,9 @@ def test_attempt_paging_and_one_active_attempt(direct_vm, scenario):
     submit(direct_vm, scenario)
     direct_vm.sender = challenger
     direct_vm.value = 10**15
-    with direct_vm.expect_revert("Claim is not accepting attempts"):
-        contract.submit_counterexample(CLAIM_ID, "another", "False", "True", "Cannot overlap")
+    contract.submit_counterexample(CLAIM_ID, "another", "False", "True", "Cannot overlap")
+    assert contract.get_claim(CLAIM_ID)["attempt_count"] == 1
+    assert contract.get_accounting(addr(challenger))["claimable"] == str(10**15)
     direct_vm.value = 0
     with direct_vm.expect_revert("Invalid limit"):
         contract.get_attempts(CLAIM_ID, 0, 51)
@@ -143,16 +159,30 @@ def test_unreviewed_attempt_refunds_stake_without_proven_verdict(direct_vm, scen
     assert contract.get_accounting(addr(sponsor))["claimable"] == str(10**16)
 
 
-def test_rejects_sponsor_and_incorrect_stake(direct_vm, scenario):
+def test_refunds_invalid_payable_attempts_without_changing_claim(direct_vm, scenario):
     contract, sponsor, challenger = scenario
     direct_vm.sender = sponsor
     direct_vm.value = 10**15
-    with direct_vm.expect_revert("Sponsor cannot challenge own claim"):
-        contract.submit_counterexample(CLAIM_ID, "x", "y", "z", "argument")
+    contract.submit_counterexample(CLAIM_ID, "x", "y", "z", "argument")
+    assert contract.get_accounting(addr(sponsor))["claimable"] == str(10**15)
     direct_vm.sender = challenger
-    direct_vm.value = 0
-    with direct_vm.expect_revert("Exact ten-percent challenge stake required"):
-        contract.submit_counterexample(CLAIM_ID, "x", "y", "z", "argument")
+    direct_vm.value = 1
+    contract.submit_counterexample(CLAIM_ID, "x", "y", "z", "argument")
+    assert contract.get_accounting(addr(challenger))["claimable"] == "1"
+    assert contract.get_claim(CLAIM_ID)["attempt_count"] == 0
+    assert contract.get_accounting(addr(sponsor))["deposited"] == str(10**16 + 10**15 + 1)
+    assert contract.get_accounting(addr(sponsor))["locked"] == str(10**16)
+
+
+def test_invalid_funding_is_withdrawable(direct_vm, scenario):
+    contract, _, challenger = scenario
+    direct_vm.sender = challenger
+    direct_vm.value = 10**16
+    contract.fund_claim(CLAIM_ID)
+    direct_vm.value = 1
+    contract.fund_claim("CT-NOT-PREPARED")
+    assert contract.get_claim(CLAIM_ID)["status"] == "OPEN"
+    assert contract.get_accounting(addr(challenger))["claimable"] == str(10**16 + 1)
 
 
 def test_bad_quote_cannot_be_proven(direct_vm, scenario):
@@ -166,7 +196,7 @@ def test_bad_quote_cannot_be_proven(direct_vm, scenario):
 
 def test_validator_recomputes_decision_and_rejects_forged_outcome(direct_vm, scenario, monkeypatch):
     contract = submit(direct_vm, scenario)
-    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v1.0.0" and hasattr(m, "assess"))
+    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v1.1.0" and hasattr(m, "assess"))
     claim = contract.get_claim(CLAIM_ID)
     attempt = contract.get_attempts(CLAIM_ID)[0]
     def simulate(leader, validator):

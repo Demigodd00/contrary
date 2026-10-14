@@ -11,7 +11,7 @@ const msg=(value:unknown)=>value instanceof Error?value.message:String(value);
 type Props={deployment:Deployment|null;session:Session|null;pending:Pending|null;onConnect:()=>void;onPending:(pending:Pending)=>void;onNotice:(notice:string)=>void};
 
 export default function Lineage({deployment,session,pending,onConnect,onPending,onNotice}:Props){
- const active=deployment?.verified&&deployment.version==='contrary.v1.0.0';
+ const active=deployment?.verified&&deployment.version==='contrary.v1.1.0';
  const [rows,setRows]=useState<LineageRecord[]>([]);
  const [selected,setSelected]=useState<LineageRecord|null>(null);
  const [revisions,setRevisions]=useState<Revision[]>([]);

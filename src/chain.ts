@@ -39,10 +39,10 @@ export async function read<T>(deployment:Deployment,method:string,args:unknown[]
  return JSON.parse(JSON.stringify(value,(_,v)=>typeof v==='bigint'?v.toString():v)) as T;
 }
 export async function verifyDeployment(deployment:Deployment){
- if(!deployment.verified||!/^0x[0-9a-fA-F]{40}$/.test(deployment.address||'')||deployment.chainId!==61999||deployment.network!=='studionet'||!['contrary.v0.2.0','contrary.v1.0.0'].includes(deployment.version)||!/^[0-9a-fA-F]{64}$/.test(deployment.sourceSha256))throw Error('Live signing is unavailable until the contract is verified.');
+ if(!deployment.verified||!/^0x[0-9a-fA-F]{40}$/.test(deployment.address||'')||deployment.chainId!==61999||deployment.network!=='studionet'||!['contrary.v0.2.0','contrary.v1.1.0'].includes(deployment.version)||!/^[0-9a-fA-F]{64}$/.test(deployment.sourceSha256))throw Error('Live signing is unavailable until the contract is verified.');
  const config=await read<{version:string;review_window_seconds:number;attempt_page_limit:number;fee_bps:number}>(deployment,'get_config');
  if(config.version!==deployment.version||config.review_window_seconds!==600||config.attempt_page_limit!==50||config.fee_bps!==0)throw Error('The on-chain policy does not match this release.');
- if(deployment.version==='contrary.v1.0.0'){
+ if(deployment.version==='contrary.v1.1.0'){
   const milestone=config as typeof config&{max_lineage_witnesses:number;revision_check_window_seconds:number};
   if(milestone.max_lineage_witnesses!==4||milestone.revision_check_window_seconds!==86400)throw Error('The milestone policy does not match this release.');
  }
@@ -94,9 +94,10 @@ export async function checkPending(pending:Pending){
 }
 function message(error:unknown){const record=error as {message?:unknown;code?:number};if(record?.code===4001)return'Wallet request rejected.';if(record?.code===-32002)return'A wallet request is already open. Resolve it before trying again.';return typeof record?.message==='string'?record.message.slice(0,400):'Wallet or network request failed.';}
 export async function send(deployment:Deployment,session:Session,method:string,args:unknown[],value:bigint,onPending:(pending:Pending)=>void){
- const counts:Record<string,number>={create_claim:1,submit_counterexample:5,review_counterexample:1,rebut_assessment:2,finalize:1,close_expired:1,recover_unreviewed:1,withdraw:0,create_lineage:2,add_lineage_witness:2,propose_revision:3,check_revision_witness:3,finalize_revision:2};
- if(!(method in counts)||args.length!==counts[method]||(!['create_claim','submit_counterexample'].includes(method)&&value!==0n))throw Error('Invalid contract action or value.');
- if(['create_lineage','add_lineage_witness','propose_revision','check_revision_witness','finalize_revision'].includes(method)&&deployment.version!=='contrary.v1.0.0')throw Error('This action requires the verified Contrary milestone contract.');
+ const counts:Record<string,number>={create_claim:1,fund_claim:1,submit_counterexample:5,review_counterexample:1,rebut_assessment:2,finalize:1,close_expired:1,recover_unreviewed:1,withdraw:0,create_lineage:2,add_lineage_witness:2,propose_revision:3,check_revision_witness:3,finalize_revision:2};
+ const payable=method==='submit_counterexample'||(method==='fund_claim'&&deployment.version==='contrary.v1.1.0')||(method==='create_claim'&&deployment.version==='contrary.v0.2.0');
+ if(!(method in counts)||args.length!==counts[method]||(!payable&&value!==0n))throw Error('Invalid contract action or value.');
+ if(['fund_claim','create_lineage','add_lineage_witness','propose_revision','check_revision_witness','finalize_revision'].includes(method)&&deployment.version!=='contrary.v1.1.0')throw Error('This action requires the verified Contrary milestone contract.');
  if(!navigator.locks)throw Error('Use a current browser over HTTPS for wallet signing.');
  return navigator.locks.request('contrary:sign:61999',{ifAvailable:true},async lock=>{
   if(!lock||memoryPending||loadPending())throw Error('A transaction is pending. Check its result before another signature.');

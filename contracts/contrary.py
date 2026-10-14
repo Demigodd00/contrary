@@ -6,7 +6,7 @@ import json
 import re
 
 
-VERSION = "contrary.v1.0.0"
+VERSION = "contrary.v1.1.0"
 REVIEW_WINDOW = 600
 MAX_SOURCE_BYTES = 12000
 ATTEMPT_PAGE_LIMIT = 50
@@ -230,6 +230,16 @@ class Contrary(gl.Contract):
         self.locked -= value
         self.credited += value
 
+    def _refund_incoming(self) -> None:
+        # StudioNet can credit value even when a payable call rolls back. Keep
+        # every invalid payable input in an explicit, withdrawable liability.
+        value = u256(gl.message.value)
+        if value > 0:
+            account = actor()
+            self.credits[account] = self.credits.get(account, u256(0)) + value
+            self.deposited += value
+            self.credited += value
+
     def _lineage(self, lineage_id: str) -> dict:
         raw = self.lineages.get(lineage_id, "")
         require(raw != "", "Unknown lineage")
@@ -303,14 +313,14 @@ class Contrary(gl.Contract):
         integer(index, 0, lineage["revision_count"] - 1, "revision index")
         return self._revision(lineage_id, index)
 
-    @gl.public.write.payable
+    @gl.public.write
     def create_claim(self, terms_json: str) -> None:
         require(isinstance(terms_json, str) and len(terms_json.encode("utf-8")) <= 7000, "Claim terms too large")
         try:
             terms = json.loads(terms_json)
         except Exception:
             raise gl.vm.UserError("[EXPECTED] Invalid claim JSON") from None
-        require(isinstance(terms, dict) and set(terms) == {"id", "title", "statement", "scope", "exclusions", "repo", "commit", "path", "deadline"}, "Invalid claim terms")
+        require(isinstance(terms, dict) and set(terms) == {"id", "title", "statement", "scope", "exclusions", "repo", "commit", "path", "deadline", "reward_wei"}, "Invalid claim terms")
         claim_id = bounded(terms["id"], 40, "claim ID")
         require(re.fullmatch(r"CT-[A-Z0-9-]{3,37}", claim_id) is not None and self.claims.get(claim_id, "") == "", "Invalid or duplicate claim ID")
         title = bounded(terms["title"], 100, "title")
@@ -319,7 +329,9 @@ class Contrary(gl.Contract):
         exclusions = bounded(terms["exclusions"], 1200, "exclusions")
         repo, sha, path = repository(terms["repo"]), commit_sha(terms["commit"]), source_path(terms["path"])
         deadline = integer(terms["deadline"], now() + 3600, now() + 14 * 86400, "deadline")
-        reward = gl.message.value
+        reward_text = terms["reward_wei"]
+        require(isinstance(reward_text, str) and re.fullmatch(r"[0-9]{1,19}", reward_text) is not None, "Invalid reward")
+        reward = int(reward_text)
         require(10**16 <= reward <= 10**18, "Reward must be 0.01..1 simulated GEN")
         def capture_source():
             return capture(repo, sha, path)
@@ -328,22 +340,45 @@ class Contrary(gl.Contract):
                  "repo": repo, "repository_id": captured["repository_id"], "commit": sha, "path": path,
                  "source": captured["source"], "source_sha256": captured["sha256"], "source_bytes": captured["bytes"],
                  "sponsor": actor(), "reward": str(reward), "created_at": now(), "deadline": deadline,
-                 "status": "OPEN", "attempt_count": 0, "active_attempt": -1, "recipient": "", "settled_at": 0}
+                 "status": "PREPARED", "attempt_count": 0, "active_attempt": -1, "recipient": "", "settled_at": 0}
         self._save(claim)
         self.order.append(claim_id)
-        self.deposited += reward
-        self.locked += reward
+
+    @gl.public.write.payable
+    def fund_claim(self, claim_id: str) -> None:
+        raw = self.claims.get(claim_id, "") if isinstance(claim_id, str) else ""
+        if raw == "":
+            self._refund_incoming()
+            return
+        claim = json.loads(raw)
+        if claim["status"] != "PREPARED" or actor() != claim["sponsor"] or now() + 3600 > claim["deadline"] or gl.message.value != int(claim["reward"]):
+            self._refund_incoming()
+            return
+        value = u256(gl.message.value)
+        self.deposited += value
+        self.locked += value
+        claim["status"] = "OPEN"
+        claim["funded_at"] = now()
+        self._save(claim)
 
     @gl.public.write.payable
     def submit_counterexample(self, claim_id: str, sample_input: str, expected: str, alleged_result: str, argument: str) -> None:
-        claim = self._claim(claim_id)
-        require(claim["status"] == "OPEN" and now() < claim["deadline"], "Claim is not accepting attempts")
-        require(actor() != claim["sponsor"], "Sponsor cannot challenge own claim")
+        raw = self.claims.get(claim_id, "") if isinstance(claim_id, str) else ""
+        if raw == "":
+            self._refund_incoming()
+            return
+        claim = json.loads(raw)
         stake = int(claim["reward"]) // 10
-        require(gl.message.value == stake, "Exact ten-percent challenge stake required")
-        attempt = {"challenger": actor(), "stake": str(stake), "sample_input": bounded(sample_input, 1000, "sample input"),
-                   "expected": bounded(expected, 500, "expected behavior"), "alleged_result": bounded(alleged_result, 500, "alleged result"),
-                   "argument": bounded(argument, 1500, "counterexample argument"), "submitted_at": now(),
+        def valid(value, maximum):
+            return isinstance(value, str) and 0 < len(value.strip()) <= maximum
+        if (claim["status"] != "OPEN" or now() >= claim["deadline"] or actor() == claim["sponsor"] or
+            gl.message.value != stake or not valid(sample_input, 1000) or not valid(expected, 500) or
+            not valid(alleged_result, 500) or not valid(argument, 1500)):
+            self._refund_incoming()
+            return
+        attempt = {"challenger": actor(), "stake": str(stake), "sample_input": sample_input.strip(),
+                   "expected": expected.strip(), "alleged_result": alleged_result.strip(),
+                   "argument": argument.strip(), "submitted_at": now(),
                    "review_by": now() + 86400, "status": "SUBMITTED", "assessments": [], "rebuttal_used": False,
                    "rebuttal": "", "challenge_until": 0, "finalized_at": 0}
         index = claim["attempt_count"]
@@ -415,8 +450,9 @@ class Contrary(gl.Contract):
     @gl.public.write
     def close_expired(self, claim_id: str) -> None:
         claim = self._claim(claim_id)
-        require(claim["status"] == "OPEN" and now() >= claim["deadline"], "Claim cannot close yet")
-        self._credit(claim["sponsor"], int(claim["reward"]))
+        require(claim["status"] in ("OPEN", "PREPARED") and now() >= claim["deadline"], "Claim cannot close yet")
+        if claim["status"] == "OPEN":
+            self._credit(claim["sponsor"], int(claim["reward"]))
         claim["status"] = "CLOSED"
         claim["recipient"] = claim["sponsor"]
         claim["settled_at"] = now()

@@ -49,7 +49,7 @@ def mock_verdict(vm, scope="IN", proof="PROVEN", quote="if name == '':"):
 def terms(deadline=NOW + 3600):
     return {"id": CLAIM_ID, "title": "Empty names are rejected", "statement": "allowed(name) always rejects an empty name.",
             "scope": "Call allowed with a Python string using only this source file.", "exclusions": "None; do not infer imported code.",
-            "repo": REPO, "commit": SHA, "path": "src/validator.py", "deadline": deadline}
+            "repo": REPO, "commit": SHA, "path": "src/validator.py", "deadline": deadline, "reward_wei": str(10**16)}
 
 
 @pytest.fixture
@@ -61,8 +61,9 @@ def scenario(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/contrary.py", sdk_version="v0.2.16")
     direct_vm.sender = direct_alice
     direct_vm.deal(direct_alice, 10**18)
-    direct_vm.value = 10**16
     contract.create_claim(json.dumps(terms()))
+    direct_vm.value = 10**16
+    contract.fund_claim(CLAIM_ID)
     direct_vm.value = 0
     direct_vm.sender = direct_bob
     direct_vm.deal(direct_bob, 10**18)

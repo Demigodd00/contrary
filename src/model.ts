@@ -1,5 +1,5 @@
 export type Verdict='PROVEN'|'REJECTED'|'INCONCLUSIVE';
-export type Status='OPEN'|'REVIEW_READY'|'REVIEW_PENDING'|'PROVEN'|'CLOSED';
+export type Status='PREPARED'|'OPEN'|'REVIEW_READY'|'REVIEW_PENDING'|'PROVEN'|'CLOSED';
 export type Assessment={kind:'initial'|'rebuttal';at:number;result:{scope:string;proof:string;quote:string;reason:string;outcome:Verdict}};
 export type Attempt={challenger:string;stake:string;sample_input:string;expected:string;alleged_result:string;argument:string;submitted_at:number;review_by:number;status:string;assessments:Assessment[];rebuttal_used:boolean;rebuttal:string;challenge_until:number;finalized_at:number};
 export type Claim={id:string;title:string;statement:string;scope:string;exclusions:string;repo:string;repository_id:number;commit:string;path:string;source?:string;source_sha256:string;source_bytes:number;sponsor:string;reward:string;created_at:number;deadline:number;status:Status;attempt_count:number;active_attempt:number;attempts?:Attempt[];recipient:string;settled_at:number};

@@ -7,7 +7,7 @@ import {TransactionHashVariant} from 'genlayer-js/types';
 
 const root=new URL('../',import.meta.url);
 const local=new URL('.local/',root);
-const stateFile=new URL('milestone-state.json',local);
+const stateFile=new URL('milestone-v11-state.json',local);
 const accountsFile=new URL('accounts.json',local);
 if(!fs.existsSync(accountsFile))throw Error('Existing disposable StudioNet accounts are missing.');
 const keys=JSON.parse(fs.readFileSync(accountsFile,'utf8'));
@@ -52,7 +52,7 @@ async function bind(kind,address){
  const onchain=await clients.sponsor.getContractCode(address);
  if(sha256(onchain.replaceAll('\r\n','\n'))!==record.sourceSha256)throw Error('Deployed code differs from submitted source');
  const config=kind==='contract'?await clients.sponsor.readContract({address,functionName:'get_config',args:[],transactionHashVariant:TransactionHashVariant.LATEST_FINAL}):null;
- if(kind==='contract'&&(config.version!=='contrary.v1.0.0'||config.max_lineage_witnesses!==4||config.revision_check_window_seconds!==86400))throw Error('Wrong v1 policy');
+ if(kind==='contract'&&(config.version!=='contrary.v1.1.0'||config.max_lineage_witnesses!==4||config.revision_check_window_seconds!==86400))throw Error('Wrong v1.1 policy');
  record.address=address;record.config=config;save();
  show({kind,address,sourceSha256:record.sourceSha256,sourceCommit:record.sourceCommit,config});
 }
@@ -96,14 +96,15 @@ else if(command==='schema'){
  record.schema=await clients.sponsor.getContractSchema(record.address);save();show(record.schema);
 }
 else if(command==='receipt')await receipt(args[0]);
-else if(command==='payable-probe')await send('sponsor','create_claim',['{}'],1n,'failed-payable-probe');
+else if(command==='payable-probe')await send('sponsor','fund_claim',['CT-NOT-PREPARED'],1n,'refundable-payable-probe');
 else if(command==='create'){
  const [claimId,commit]=args;id(claimId,'CT');sha(commit);
  const terms={id:claimId,title:'Empty names are rejected',statement:'For fast and slow modes, allowed("", mode) returns False.',
   scope:'Call allowed with the empty Python string and mode fast or slow, using only the complete pinned file.',
-  exclusions:'Do not infer imports or external runtime state.',repo:'Demigodd00/contrary',commit,path:'examples/lineage_fixture.py',deadline:Math.floor(Date.now()/1000)+7200};
- await send('sponsor','create_claim',[JSON.stringify(terms)],10n**16n,'create:'+claimId);
+  exclusions:'Do not infer imports or external runtime state.',repo:'Demigodd00/contrary',commit,path:'examples/lineage_fixture.py',deadline:Math.floor(Date.now()/1000)+7200,reward_wei:String(10n**16n)};
+ await send('sponsor','create_claim',[JSON.stringify(terms)],0n,'create:'+claimId);
 }
+else if(command==='fund')await send('sponsor','fund_claim',[id(args[0],'CT')],10n**16n,'fund:'+args[0]);
 else if(command==='challenge'){
  const [claimId,mode]=args;id(claimId,'CT');if(!['fast','slow'].includes(mode))throw Error('Choose fast or slow');
  await send('challenger','submit_counterexample',[claimId,`allowed("", "${mode}")`,'False','True',`The ${mode} branch returns True for an empty string in the frozen source.`],10n**15n,'challenge:'+claimId);

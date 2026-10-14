@@ -33,7 +33,7 @@ def mock_check(vm, status, line):
 def claim_terms(claim_id):
     return {"id": claim_id, "title": "Empty names are rejected", "statement": "allowed(name, mode) always rejects an empty name.",
             "scope": "Call allowed with an empty Python string and mode fast or slow, using only this file.",
-            "exclusions": "No imports or runtime state.", "repo": REPO, "commit": SHA, "path": PATH, "deadline": NOW + 7200}
+            "exclusions": "No imports or runtime state.", "repo": REPO, "commit": SHA, "path": PATH, "deadline": NOW + 7200, "reward_wei": str(10**16)}
 
 
 @pytest.fixture
@@ -43,9 +43,11 @@ def lineage(direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie):
     contract = direct_deploy("contracts/contrary.py", sdk_version="v0.2.16")
     direct_vm.sender = direct_alice
     direct_vm.deal(direct_alice, 10**18)
-    direct_vm.value = 10**16
     for claim_id in ("CT-FAST-EMPTY", "CT-SLOW-EMPTY"):
         contract.create_claim(json.dumps(claim_terms(claim_id)))
+        direct_vm.value = 10**16
+        contract.fund_claim(claim_id)
+        direct_vm.value = 0
     direct_vm.value = 0
     for claim_id, challenger, mode in (("CT-FAST-EMPTY", direct_bob, "fast"), ("CT-SLOW-EMPTY", direct_charlie, "slow")):
         direct_vm.sender = challenger
@@ -161,7 +163,7 @@ def test_validator_rejects_forged_line_and_status(direct_vm, lineage, monkeypatc
     contract.propose_revision(LINEAGE_ID, -1, B_SHA)
     direct_vm.clear_mocks()
     mock_check(direct_vm, "CLEARED", 3)
-    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v1.0.0" and hasattr(m, "check_known_witness"))
+    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v1.1.0" and hasattr(m, "check_known_witness"))
     def simulate(leader, validator):
         good = leader()
         assert validator(module.gl.vm.Return(dict(good, line=5))) is False

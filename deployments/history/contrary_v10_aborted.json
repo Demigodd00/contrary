@@ -1,0 +1,27 @@
+{
+  "network": "StudioNet",
+  "chainId": 61999,
+  "version": "contrary.v1.0.0",
+  "status": "ABORTED_DO_NOT_USE",
+  "address": "0x744ADCd09F28E0C81983ba749a68197F2e104207",
+  "sourceCommit": "c0589a86f9b37ce18552ed31f42605843d526a4c",
+  "sourceSha256": "dec9ed09eab3730da3ae70df99029084933bfc445e215af5d1e6affae2a5c6c7",
+  "deployment": {
+    "hash": "0xd482d9c06cd8d831b8418c5a2ac7107138043b1af84ac13272bbbfd29bc4ad33",
+    "status": "FINALIZED",
+    "leaderExecution": "SUCCESS"
+  },
+  "failedPayableProbe": {
+    "hash": "0x26fc88b45c447522f50108501954af702e05b325a72f4d3c9eac85ebb711d6d0",
+    "valueWei": "1",
+    "status": "FINALIZED",
+    "leaderExecution": "ERROR",
+    "error": "[EXPECTED] Invalid claim terms",
+    "valueCredited": true,
+    "contractBalanceAfterWei": "1",
+    "accountingDepositedAfterWei": "0",
+    "claimableAfterWei": "0"
+  },
+  "finding": "A failed payable call credited 1 simulated wei to this v1.0 contract despite rolled-back accounting. The wei is not recoverable through v1.0 withdraw. No actual demo claims were created. v1.0 was not connected to a public frontend or submitted as a milestone.",
+  "replacement": "contrary.v1.1.0 separates nonpayable source preparation from payable funding and credits invalid payable values for withdrawal. The replacement requires its own fresh deployment and live proof."
+}
