@@ -7,7 +7,7 @@ import {TransactionHashVariant} from 'genlayer-js/types';
 
 const root=new URL('../',import.meta.url);
 const local=new URL('.local/',root);
-const stateFile=new URL('milestone-v11-state.json',local);
+const stateFile=new URL('milestone-v12-state.json',local);
 const accountsFile=new URL('accounts.json',local);
 if(!fs.existsSync(accountsFile))throw Error('Existing disposable StudioNet accounts are missing.');
 const keys=JSON.parse(fs.readFileSync(accountsFile,'utf8'));
@@ -26,7 +26,10 @@ if(Number(await clients.sponsor.request({method:'eth_chainId'}))!==61999)throw E
 function execution(receipt){
  const raw=receipt.consensusData?.leaderReceipt??receipt.consensus_data?.leader_receipt;
  const leader=Array.isArray(raw)?[...raw].reverse().find(item=>item.mode==='leader')??raw.at(-1):raw;
- return {status:String(receipt.statusName??receipt.status_name??receipt.status).toUpperCase(),execution:String(leader?.execution_result??leader?.executionResult??''),result:leader?.result??null};
+ const status=String(receipt.statusName??receipt.status_name??receipt.status).toUpperCase();
+ const execution=String(leader?.execution_result??leader?.executionResult??'');
+ const consensus=String(receipt.result_name??receipt.resultName??'');
+ return {status,consensus,execution,success:status==='FINALIZED'&&consensus==='MAJORITY_AGREE'&&execution==='SUCCESS',result:leader?.result??null};
 }
 async function receipt(hash){
  if(!/^0x[0-9a-fA-F]{64}$/.test(hash||''))throw Error('Provide a 32-byte transaction hash');
@@ -47,13 +50,13 @@ async function bind(kind,address){
  const record=state[kind];if(!record?.deployHash||record.address)throw Error('Missing or already-bound deployment');
  const raw=await clients.sponsor.getTransaction({hash:record.deployHash});
  const outcome=execution(raw);
- if(outcome.status!=='FINALIZED'||outcome.execution!=='SUCCESS')throw Error('Deployment is not FINALIZED + SUCCESS');
+ if(!outcome.success)throw Error('Deployment is not FINALIZED + MAJORITY_AGREE + SUCCESS');
  address??=raw.contractAddress??raw.contract_address??raw.data?.contract_address;
  if(!/^0x[0-9a-fA-F]{40}$/.test(address||''))throw Error('Verified contract address is required');
  const onchain=await clients.sponsor.getContractCode(address);
  if(sha256(onchain.replaceAll('\r\n','\n'))!==record.sourceSha256)throw Error('Deployed code differs from submitted source');
  const config=kind==='contract'?await clients.sponsor.readContract({address,functionName:'get_config',args:[],transactionHashVariant:TransactionHashVariant.LATEST_FINAL}):null;
- if(kind==='contract'&&(config.version!=='contrary.v1.1.0'||config.max_lineage_witnesses!==4||config.revision_check_window_seconds!==86400))throw Error('Wrong v1.1 policy');
+ if(kind==='contract'&&(config.version!=='contrary.v1.2.0'||config.max_lineage_witnesses!==4||config.revision_check_window_seconds!==86400))throw Error('Wrong v1.2 policy');
  record.address=address;record.config=config;save();
  show({kind,address,sourceSha256:record.sourceSha256,sourceCommit:record.sourceCommit,config});
 }
@@ -97,6 +100,14 @@ else if(command==='schema'){
  record.schema=await clients.sponsor.getContractSchema(record.address);save();show(record.schema);
 }
 else if(command==='receipt')await receipt(args[0]);
+else if(command==='receipt-detail'){
+ const raw=await clients.sponsor.getTransaction({hash:args[0]});
+ const consensus=raw.consensusData??raw.consensus_data??{};
+ show({statusName:raw.statusName??raw.status_name,resultName:raw.result_name,result:raw.result,appealUndetermined:raw.appeal_undetermined,
+  votes:consensus.votes,receipts:(consensus.validators??[]).map(item=>({mode:item.mode,vote:item.vote,execution:item.execution_result,stateHash:item.contract_state_hash,error:item.genvm_result?.error_code,nondetDisagree:item.nondet_disagree,stdout:item.genvm_result?.stdout,stderr:item.genvm_result?.stderr})),
+  leaderReceipts:(consensus.leader_receipt??[]).map(item=>({mode:item.mode,execution:item.execution_result,stateHash:item.contract_state_hash,error:item.genvm_result?.error_code,nondetDisagree:item.nondet_disagree,stdout:item.genvm_result?.stdout,stderr:item.genvm_result?.stderr})),
+  eqBlocksOutputs:raw.eq_blocks_outputs,triggeredTransactions:raw.triggeredTransactions??raw.triggered_transactions});
+}
 else if(command==='payable-probe')await send('sponsor','fund_claim',['CT-NOT-PREPARED'],1n,'refundable-payable-probe');
 else if(command==='create'){
  const [claimId,commit]=args;id(claimId,'CT');sha(commit);
@@ -112,6 +123,7 @@ else if(command==='challenge'){
 }
 else if(command==='review')await send('observer','review_counterexample',[id(args[0],'CT')],0n,'review:'+args[0]);
 else if(command==='finalize')await send('observer','finalize',[id(args[0],'CT')],0n,'finalize:'+args[0]);
+else if(command==='close')await send('observer','close_expired',[id(args[0],'CT')],0n,'close:'+args[0]);
 else if(command==='lineage')await send('sponsor','create_lineage',[id(args[0],'CL'),id(args[1],'CT')],0n,'lineage:'+args[0]);
 else if(command==='add')await send('sponsor','add_lineage_witness',[id(args[0],'CL'),id(args[1],'CT')],0n,'add:'+args[0]+':'+args[1]);
 else if(command==='propose'){
@@ -124,6 +136,11 @@ else if(command==='check'){
  if(!/^\d+$/.test(revision||'')||!/^\d+$/.test(witness||''))throw Error('Nonnegative indexes required');
  await send('observer','check_revision_witness',[lineage,Number(revision),Number(witness)],0n,'check:'+lineage+':'+revision+':'+witness);
 }
+else if(command==='retry-check'){
+ const [lineage,revision,witness]=args;id(lineage,'CL');
+ if(!/^\d+$/.test(revision||'')||!/^\d+$/.test(witness||''))throw Error('Nonnegative indexes required');
+ await send('observer','check_revision_witness',[lineage,Number(revision),Number(witness)],0n,'retry-check:'+lineage+':'+revision+':'+witness);
+}
 else if(command==='finish'){
  const [lineage,revision]=args;id(lineage,'CL');if(!/^\d+$/.test(revision||''))throw Error('Revision index required');
  await send('observer','finalize_revision',[lineage,Number(revision)],0n,'finish:'+lineage+':'+revision);
@@ -134,6 +151,6 @@ else if(command==='attempts')await read('get_attempts',[id(args[0],'CT'),0,20]);
 else if(command==='lineage-read')await read('get_lineage',[id(args[0],'CL')]);
 else if(command==='revision-read')await read('get_revision',[id(args[0],'CL'),Number(args[1])]);
 else if(command==='accounting'){
- const values={};for(const [role,address] of Object.entries(accounts))values[role]=await clients.sponsor.readContract({address:state.contract.address,functionName:'get_accounting',args:[address],transactionHashVariant:TransactionHashVariant.LATEST_FINAL});show(values);
+ const values={};for(const role of (args.length?args:Object.keys(accounts))){if(!accounts[role])throw Error('Unknown test role');values[role]=await clients.sponsor.readContract({address:state.contract.address,functionName:'get_accounting',args:[accounts[role]],transactionHashVariant:TransactionHashVariant.LATEST_FINAL});}show(values);
 }
 else throw Error('Unknown milestone operator command');

@@ -1,0 +1,23 @@
+{
+  "status": "abandoned_live_pilot_not_submitted",
+  "network": "StudioNet",
+  "chainId": 61999,
+  "version": "contrary.v1.1.0",
+  "address": "0xad3925402b849b4545403E71E6e1c3350D69C4be",
+  "deployTransaction": "0x935e2177619e0c1763e767def55756c05ef5bbeb88e01b70b5d5eade10067add",
+  "sourceCommit": "95fd55ae71507c8b98ff05a4d09d8248b6fa7272",
+  "sourceSha256": "fb4a1c051b1a0b86d440dcc20afb29ec91a7dc8f22188f2869d09ce9eaa7dc05",
+  "failedMilestoneCheck": {
+    "lineage": "CL-M1-EMPTY-001",
+    "revision": 0,
+    "witness": "CT-M1-FAST-001",
+    "firstTransaction": "0x316a0380d8159bd1afa0b0d7632825ac978b4a9727010a5ba85abe4070bde624",
+    "firstConsensusResult": "MAJORITY_DISAGREE",
+    "retryTransaction": "0x03ccb01c45b32d2cfe837c96bd726b7ede4eef0eda5e6426212b695865e91c73",
+    "retryConsensusResult": "MAJORITY_AGREE",
+    "incorrectStoredStatus": "STILL_BREAKS",
+    "storedQuote": "return name != \"\"",
+    "correctStatusForEmptyInput": "CLEARED"
+  },
+  "disposition": "Do not submit this contract or use its revision result as evidence. The separate milestone preview is protected while v1.2 is tested. The accepted v0.2 contract and website are unaffected."
+}

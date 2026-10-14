@@ -1,6 +1,5 @@
 import json
 import re
-import sys
 
 import pytest
 
@@ -24,10 +23,6 @@ def mock_commit(vm, sha, source, parents):
 
 def mock_initial(vm):
     vm.mock_llm("CONTRARY_STATIC_CLAIM_V1", json.dumps({"scope": "IN", "proof": "PROVEN", "quote": "return name == ''"}))
-
-
-def mock_check(vm, status, line):
-    vm.mock_llm("CONTRARY_LINEAGE_CHECK_V1", json.dumps({"status": status, "line": line}))
 
 
 def claim_terms(claim_id):
@@ -74,10 +69,8 @@ def test_partial_then_complete_fix_and_branch_local_result(direct_vm, lineage):
     assert rev["witness_ids"] == ["CT-FAST-EMPTY", "CT-SLOW-EMPTY"]
     assert rev["source"] == PARTIAL
     direct_vm.clear_mocks()
-    mock_check(direct_vm, "CLEARED", 3)
     contract.check_revision_witness(LINEAGE_ID, 0, 0)
     direct_vm.clear_mocks()
-    mock_check(direct_vm, "STILL_BREAKS", 5)
     contract.check_revision_witness(LINEAGE_ID, 0, 1)
     contract.finalize_revision(LINEAGE_ID, 0)
     rev = contract.get_revision(LINEAGE_ID, 0)
@@ -89,10 +82,8 @@ def test_partial_then_complete_fix_and_branch_local_result(direct_vm, lineage):
     mock_commit(direct_vm, C_SHA, FIXED, [B_SHA])
     contract.propose_revision(LINEAGE_ID, 0, C_SHA)
     direct_vm.clear_mocks()
-    mock_check(direct_vm, "CLEARED", 3)
     contract.check_revision_witness(LINEAGE_ID, 1, 0)
     direct_vm.clear_mocks()
-    mock_check(direct_vm, "CLEARED", 5)
     contract.check_revision_witness(LINEAGE_ID, 1, 1)
     contract.finalize_revision(LINEAGE_ID, 1)
     assert contract.get_revision(LINEAGE_ID, 1)["status"] == "KNOWN_CASES_CLEARED"
@@ -101,9 +92,7 @@ def test_partial_then_complete_fix_and_branch_local_result(direct_vm, lineage):
     mock_commit(direct_vm, D_SHA, SIBLING, [SHA])
     contract.propose_revision(LINEAGE_ID, -1, D_SHA)
     direct_vm.clear_mocks()
-    mock_check(direct_vm, "STILL_BREAKS", 3)
     contract.check_revision_witness(LINEAGE_ID, 2, 0)
-    mock_check(direct_vm, "STILL_BREAKS", 5)
     contract.check_revision_witness(LINEAGE_ID, 2, 1)
     contract.finalize_revision(LINEAGE_ID, 2)
     assert contract.get_revision(LINEAGE_ID, 2)["status"] == "BLOCKED"
@@ -133,7 +122,6 @@ def test_authorization_replay_and_wrong_commit_parent(direct_vm, lineage):
     with direct_vm.expect_revert("Witness checks remain pending"):
         contract.finalize_revision(LINEAGE_ID, 0)
     direct_vm.clear_mocks()
-    mock_check(direct_vm, "CLEARED", 3)
     contract.check_revision_witness(LINEAGE_ID, 0, 0)
     with direct_vm.expect_revert("already checked"):
         contract.check_revision_witness(LINEAGE_ID, 0, 0)
@@ -141,10 +129,9 @@ def test_authorization_replay_and_wrong_commit_parent(direct_vm, lineage):
 
 def test_timeout_and_unclear_never_certify(direct_vm, lineage):
     contract, _, _, _ = lineage
-    mock_commit(direct_vm, B_SHA, PARTIAL, [SHA])
+    mock_commit(direct_vm, B_SHA, PARTIAL + "x = 1\n", [SHA])
     contract.propose_revision(LINEAGE_ID, -1, B_SHA)
     direct_vm.clear_mocks()
-    mock_check(direct_vm, "UNCLEAR", 0)
     contract.check_revision_witness(LINEAGE_ID, 0, 0)
     deadline = contract.get_revision(LINEAGE_ID, 0)["check_deadline"]
     direct_vm.warp(iso(deadline))
@@ -157,23 +144,23 @@ def test_timeout_and_unclear_never_certify(direct_vm, lineage):
         contract.finalize_revision(LINEAGE_ID, 0)
 
 
-def test_validator_rejects_forged_line_and_status(direct_vm, lineage, monkeypatch):
+def test_model_cannot_override_deterministic_revision_result(direct_vm, lineage):
     contract, _, _, _ = lineage
     mock_commit(direct_vm, B_SHA, PARTIAL, [SHA])
     contract.propose_revision(LINEAGE_ID, -1, B_SHA)
     direct_vm.clear_mocks()
-    mock_check(direct_vm, "CLEARED", 3)
-    module = next(m for m in tuple(sys.modules.values()) if getattr(m, "VERSION", None) == "contrary.v1.1.0" and hasattr(m, "check_known_witness"))
-    def simulate(leader, validator):
-        good = leader()
-        assert validator(module.gl.vm.Return(dict(good, line=5))) is False
-        assert validator(module.gl.vm.Return(dict(good, status="STILL_BREAKS"))) is False
-        assert validator(module.gl.vm.Return(dict(good, extra="forged"))) is False
-        assert validator(module.gl.vm.Return(good)) is True
-        return good
-    monkeypatch.setattr(module.gl.vm, "run_nondet_unsafe", simulate)
+    direct_vm.mock_llm("CONTRARY_LINEAGE_CHECK_V1", json.dumps({"status": "STILL_BREAKS", "line": 3}))
     contract.check_revision_witness(LINEAGE_ID, 0, 0)
     assert contract.get_revision(LINEAGE_ID, 0)["checks"][0]["status"] == "CLEARED"
+
+
+def test_pure_case_preview_is_narrow_and_non_executing(lineage):
+    contract, _, _, _ = lineage
+    assert contract.preview_pure_case(PARTIAL, "allowed('', 'fast')") == {"known": True, "value": False, "line": 3}
+    assert contract.preview_pure_case(PARTIAL, "allowed('', 'slow')") == {"known": True, "value": True, "line": 5}
+    unsafe = "def allowed(name, mode):\n    return __import__('os').system('echo unsafe')\n"
+    assert contract.preview_pure_case(unsafe, "allowed('', 'fast')") == {"known": False, "value": None, "line": 0}
+    assert contract.preview_pure_case(PARTIAL + "x = 1\n", "allowed('', 'fast')")["known"] is False
 
 
 @pytest.mark.parametrize("status,body,expected", [
@@ -198,9 +185,7 @@ def test_prompt_injection_comment_has_no_privileged_path_in_state_machine(direct
     mock_commit(direct_vm, B_SHA, malicious, [SHA])
     contract.propose_revision(LINEAGE_ID, -1, B_SHA)
     direct_vm.clear_mocks()
-    mock_check(direct_vm, "UNCLEAR", 0)
     contract.check_revision_witness(LINEAGE_ID, 0, 0)
-    mock_check(direct_vm, "STILL_BREAKS", 5)
     contract.check_revision_witness(LINEAGE_ID, 0, 1)
     contract.finalize_revision(LINEAGE_ID, 0)
     assert contract.get_revision(LINEAGE_ID, 0)["status"] == "BLOCKED"

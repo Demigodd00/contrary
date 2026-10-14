@@ -13,6 +13,9 @@ describe('transaction settlement',()=>{
  it('waits for finalized successful contract execution',()=>{
   expect(receiptOutcome({statusName:'ACCEPTED',consensusData:parent.consensusData})).toBe('pending');
   expect(receiptOutcome(parent)).toBe('success');
+  expect(receiptOutcome({...parent,result_name:'MAJORITY_AGREE'})).toBe('success');
+  expect(receiptOutcome({...parent,result_name:'MAJORITY_DISAGREE'})).toBe('error');
+  expect(receiptOutcome({...parent,result_name:'NO_MAJORITY'})).toBe('error');
   expect(receiptOutcome({statusName:'FINALIZED',consensusData:{leaderReceipt:[{mode:'leader',execution_result:'ERROR'}]}})).toBe('error');
  });
  it('requires a separate credited withdrawal transfer',()=>{
