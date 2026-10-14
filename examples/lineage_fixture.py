@@ -6,7 +6,7 @@ Claim under test: allowed("", mode) is False for fast and slow modes.
 
 def allowed(name: str, mode: str) -> bool:
     if mode == "fast":
-        return name == ""
+        return name != ""
     if mode == "slow":
         return name == ""
     return False
