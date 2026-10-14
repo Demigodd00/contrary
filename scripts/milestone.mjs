@@ -73,7 +73,8 @@ function sha(value){if(!/^[0-9a-f]{40}$/.test(value||''))throw Error('Full lower
 
 if(command==='accounts')show(accounts);
 else if(command==='balances'){
- const values={};for(const [role,address] of Object.entries(accounts))values[role]=String(await clients[role].getBalance({address}));show(values);
+ const values={};for(const [role,address] of Object.entries(accounts))values[role]=String(await clients[role].getBalance({address}));
+ if(state.contract?.address)values.contract=String(await clients.sponsor.getBalance({address:state.contract.address}));show(values);
 }
 else if(command==='state')show({network:state.network,chainId:state.chainId,probe:state.probe,contract:state.contract,transactions:state.transactions});
 else if(command==='probe-deploy')await deploy('probe');
@@ -95,6 +96,7 @@ else if(command==='schema'){
  record.schema=await clients.sponsor.getContractSchema(record.address);save();show(record.schema);
 }
 else if(command==='receipt')await receipt(args[0]);
+else if(command==='payable-probe')await send('sponsor','create_claim',['{}'],1n,'failed-payable-probe');
 else if(command==='create'){
  const [claimId,commit]=args;id(claimId,'CT');sha(commit);
  const terms={id:claimId,title:'Empty names are rejected',statement:'For fast and slow modes, allowed("", mode) returns False.',
