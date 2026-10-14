@@ -32,6 +32,7 @@ async function receipt(hash){
  if(!/^0x[0-9a-fA-F]{64}$/.test(hash||''))throw Error('Provide a 32-byte transaction hash');
  const raw=await clients.sponsor.getTransaction({hash});
  const summary={hash,...execution(raw),address:raw.contractAddress??raw.contract_address??raw.data?.contract_address??null,
+  from:raw.fromAddress??raw.from_address??null,to:raw.toAddress??raw.to_address??null,value:String(raw.value??''),
   triggeredTransactions:raw.triggeredTransactions??raw.triggered_transactions??[],valueCredited:raw.valueCredited??raw.value_credited??null};
  show(summary);
 }
