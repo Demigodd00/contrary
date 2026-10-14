@@ -127,6 +127,7 @@ else if(command==='finish'){
  const [lineage,revision]=args;id(lineage,'CL');if(!/^\d+$/.test(revision||''))throw Error('Revision index required');
  await send('observer','finalize_revision',[lineage,Number(revision)],0n,'finish:'+lineage+':'+revision);
 }
+else if(command==='withdraw')await send(args[0]||'sponsor','withdraw',[],0n,'withdraw:'+String(args[0]||'sponsor'));
 else if(command==='claim')await read('get_claim',[id(args[0],'CT')]);
 else if(command==='attempts')await read('get_attempts',[id(args[0],'CT'),0,20]);
 else if(command==='lineage-read')await read('get_lineage',[id(args[0],'CL')]);
