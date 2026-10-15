@@ -1,6 +1,6 @@
 # Contrary milestone v1.2 — Portal handoff
 
-This is a **Milestone** on the accepted [Contrary by demigodd00](https://portal.genlayer.foundation/builders/explorer/contrary-by-demigodd00/) project, not a second Project submission. Select that parent entry. The accepted v0.2 website remains unchanged; the milestone uses its own StudioNet contract and website. Submit only after the browser-wallet gate in [`MILESTONE_1.md`](MILESTONE_1.md) is complete. The human owner submits to the Portal.
+This is a **Milestone** on the accepted [Contrary by demigodd00](https://portal.genlayer.foundation/builders/explorer/contrary-by-demigodd00) project, not a second Project submission. Select that parent entry. The accepted v0.2 website remains unchanged; the milestone uses its own StudioNet contract and website. Submit only after the browser-wallet gate in [`MILESTONE_1.md`](MILESTONE_1.md) is complete. The human owner submits to the Portal.
 
 ## Copy into the milestone form
 

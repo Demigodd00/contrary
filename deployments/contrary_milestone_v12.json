@@ -22,7 +22,7 @@
     "version": "contrary.v1.2.0"
   },
   "frontend": "https://contrary-milestone.vercel.app/?view=lineage&lineage=CL-M2-EMPTY-001",
-  "frontendDeploymentId": "dpl_Fdr4HpN24yVF4zU5Z5vC1Mxf1NxV",
+  "frontendDeploymentId": "dpl_HVcV8qPRrWhxFNxFH4nTzJmKHijT",
   "anonymousReadVerified": true,
   "browserWalletSignatureVerified": false,
   "proofManifest": "deployments/contrary_milestone_v12_proof.json",
