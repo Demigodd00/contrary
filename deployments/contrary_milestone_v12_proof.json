@@ -14,7 +14,8 @@
   },
   "acceptanceBaseline": {
     "commit": "ab68f62de1a5b8ba7a7aebf13f8098df843d99c4",
-    "confidence": "inferred from latest Oct 1 local history; Portal v0.2 evidence points to moving main and does not pin rewarded SHA"
+    "vercelProductionDeployment": "dpl_3EDUEVjidvjJfnGCU6PiGpQYEHx6",
+    "evidence": "Vercel deployment for the accepted contrary-inky.vercel.app production alias reports gitSource.ref=main and gitSource.sha=ab68f62de1a5b8ba7a7aebf13f8098df843d99c4; origin/main remains at this commit. The Portal accepted entry itself points to moving main and does not pin a rewarded SHA."
   },
   "claims": ["CT-M2-FAST-001", "CT-M2-SLOW-001"],
   "lineage": "CL-M2-EMPTY-001",
