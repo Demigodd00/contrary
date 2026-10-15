@@ -1,6 +1,6 @@
 # Contrary milestone — Versioned Counterexample Ledger
 
-Status: v1.2 has passed its core StudioNet live demonstration and is **not yet submitted**. The accepted v0.2 site and contract remain unchanged. The v1.0 and v1.1 StudioNet pilots were abandoned; see the factual records in [`deployments/history`](../deployments/history). In particular, v1.1's LLM-based revision check reached validator disagreement and then incorrectly marked a repaired empty-string case as still broken. Do not cite that pilot as a successful milestone. The separate v1.2 website and browser-wallet check are release gates, distinct from the on-chain proof.
+Status: v1.2 has passed its core StudioNet live demonstration and is **not yet submitted**. The [separate milestone website](https://contrary-milestone.vercel.app/?view=lineage&lineage=CL-M2-EMPTY-001) now shows both finalized revisions anonymously. The accepted v0.2 site and contract remain unchanged. The v1.0 and v1.1 StudioNet pilots were abandoned; see the factual records in [`deployments/history`](../deployments/history). In particular, v1.1's LLM-based revision check reached validator disagreement and then incorrectly marked a repaired empty-string case as still broken. Do not cite that pilot as a successful milestone. A real browser-wallet signature on the milestone site remains a separate release gate.
 
 ## What is new
 
@@ -27,7 +27,7 @@ The last v0.2 commit before the Portal acceptance date appears to be [`ab68f62`]
 - Local direct-mode tests cover partial and full fixes, sibling branches, prompt-injection comments, unsupported syntax, wrong Git parent, replay, timeout, and value accounting. These mocked tests are not live GenVM proof.
 - Verify the current v1.2 deployment source hash, pinned runner, ABI, chain 61999, and on-chain config. A compact `preview_pure_case` call confirms the restricted parser works in GenVM; larger string arguments to StudioNet's read-only `gen_call` currently hit an RLP encoding error, so the three full fixture files must be verified through the real pinned-source write path and on-chain revision readbacks instead.
 - The two-wallet StudioNet proof now covers `CLEARED`/`STILL_BREAKS` → `BLOCKED` and `CLEARED`/`CLEARED` → `KNOWN_CASES_CLEARED`, with finalized validator-agreed receipts and on-chain readbacks. It also covers the invalid-payable credit and credited withdrawal. One slow-claim review finalized `MAJORITY_DISAGREE`; the separate successful retry is recorded, not hidden.
-- Still verify a real browser-wallet signature on the separate milestone site and anonymous public read access. Keep the accepted v0.2 site intact.
+- Anonymous public read access now works through the site's same-origin StudioNet read route; browser wallets still sign through their own StudioNet provider. A real browser-wallet signature on the milestone site remains unverified. Keep the accepted v0.2 site intact.
 - The exact last rewarded Project/Milestone commit remains unconfirmed by the Portal. Use the inferred comparison above with its caveat, or supply a pinned rewarded SHA if one exists.
 
 ## Reviewer path

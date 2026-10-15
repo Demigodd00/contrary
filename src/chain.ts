@@ -9,7 +9,14 @@ export type Pending={hash:`0x${string}`;method:string;claimId:string;account:str
 const pendingKey='contrary:pending:61999';
 let reader:Promise<ReturnType<typeof createClient>>|undefined;
 let memoryPending:Pending|null=null;
-const getReader=()=>reader??=import('genlayer-js').then(({createClient,chains})=>createClient({chain:chains.studionet}));
+const getReader=()=>reader??=import('genlayer-js').then(({createClient,chains})=>{
+ // The milestone's public read path stays on the site's origin. Wallet signing
+ // still uses the wallet's own StudioNet provider, never this read proxy.
+ const proxy=window.location.hostname.startsWith('contrary-milestone')
+  ?new URL('/rpc',window.location.origin).href:null;
+ const chain=proxy?{...chains.studionet,rpcUrls:{...chains.studionet.rpcUrls,default:{http:[proxy]}}}:chains.studionet;
+ return createClient({chain});
+});
 const isHash=(value:unknown):value is `0x${string}`=>typeof value==='string'&&/^0x[0-9a-fA-F]{64}$/.test(value);
 
 export function loadPending():Pending|null{try{const raw=localStorage.getItem(pendingKey);if(!raw)return null;const p=JSON.parse(raw) as Pending;return isHash(p.hash)?p:null;}catch{return null;}}
