@@ -17,3 +17,10 @@ export function parseGEN(value:string){
 export function formatGEN(value:string|bigint){const n=BigInt(value),whole=n/10n**18n,fraction=(n%10n**18n).toString().padStart(18,'0').replace(/0+$/,'');return `${whole}${fraction?'.'+fraction:''}`;}
 export function short(value:string){return value.length>20?value.slice(0,8)+'…'+value.slice(-6):value;}
 export function date(value:number){return new Date(value*1000).toLocaleString();}
+export function emptyAttemptDescription(status:Status){return status==='PREPARED'?'No counterexample yet. Challenges open only after the sponsor funds the reward.':'No counterexample submitted yet.';}
+export function rewardDescription(status:Status){
+ if(status==='PREPARED')return 'Reward configured but not funded. No GEN is locked and challenges are closed until funding.';
+ if(status==='PROVEN')return 'Reward and stake credited to the challenger; withdrawal is separate.';
+ if(status==='CLOSED')return 'Remaining reward credited back to the sponsor; withdrawal is separate.';
+ return 'Reward locked by the sponsor on StudioNet until the claim settles.';
+}

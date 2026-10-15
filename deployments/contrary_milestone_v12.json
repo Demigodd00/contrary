@@ -22,9 +22,22 @@
     "version": "contrary.v1.2.0"
   },
   "frontend": "https://contrary-milestone.vercel.app/?view=lineage&lineage=CL-M2-EMPTY-001",
-  "frontendDeploymentId": "dpl_HVcV8qPRrWhxFNxFH4nTzJmKHijT",
+  "frontendDeploymentId": "dpl_6R9WUHpMAwdJWkZ5RvgFSZv32gy7",
   "anonymousReadVerified": true,
-  "browserWalletSignatureVerified": false,
+  "browserWalletSignatureVerified": true,
+  "browserWalletWrite": {
+    "claimId": "CT-M2-WALLET-001",
+    "transactionHash": "0x5ea601dcb01b52bfd52daed93658905d9b57ba7e406ffa0041ce94cb2cf768fe",
+    "status": "FINALIZED",
+    "consensusResult": "MAJORITY_AGREE",
+    "executionResult": "SUCCESS",
+    "account": "0x8d74f33835a2301c3c19ee1079bee68885ed9c9c",
+    "valueWei": "0",
+    "claimStatus": "PREPARED",
+    "rewardWei": "10000000000000000",
+    "sourceSha256": "bda22fd3312dd60b42097dbe2bfd166be641c856f627409e0274860412bb487a",
+    "anonymousPage": "https://contrary-milestone.vercel.app/?claim=CT-M2-WALLET-001"
+  },
   "proofManifest": "deployments/contrary_milestone_v12_proof.json",
-  "scope": "StudioNet simulated GEN only; core live lineage and withdrawal proven. Browser-wallet signing remains unverified."
+  "scope": "StudioNet simulated GEN only; core live lineage and withdrawal proven. A separate browser-wallet create_claim write finalized with 0 GEN; the claim remains unfunded."
 }

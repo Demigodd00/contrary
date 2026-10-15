@@ -1,6 +1,6 @@
 # Contrary milestone — Versioned Counterexample Ledger
 
-Status: v1.2 has passed its core StudioNet live demonstration and is **not yet submitted**. The [separate milestone website](https://contrary-milestone.vercel.app/?view=lineage&lineage=CL-M2-EMPTY-001) now shows both finalized revisions anonymously. The accepted v0.2 site and contract remain unchanged. The v1.0 and v1.1 StudioNet pilots were abandoned; see the factual records in [`deployments/history`](../deployments/history). In particular, v1.1's LLM-based revision check reached validator disagreement and then incorrectly marked a repaired empty-string case as still broken. Do not cite that pilot as a successful milestone. A real browser-wallet signature on the milestone site remains a separate release gate.
+Status: v1.2 has passed its core StudioNet live demonstration and browser-wallet write check, but is **not yet submitted**. The [separate milestone website](https://contrary-milestone.vercel.app/?view=lineage&lineage=CL-M2-EMPTY-001) shows both finalized revisions anonymously. The accepted v0.2 site and contract remain unchanged. The v1.0 and v1.1 StudioNet pilots were abandoned; see the factual records in [`deployments/history`](../deployments/history). In particular, v1.1's LLM-based revision check reached validator disagreement and then incorrectly marked a repaired empty-string case as still broken. Do not cite that pilot as a successful milestone.
 
 ## What is new
 
@@ -22,12 +22,14 @@ Two claims using the same pinned 309-byte source became finalized `PROVEN` witne
 
 The accepted v0.2 site's Vercel production deployment `dpl_3EDUEVjidvjJfnGCU6PiGpQYEHx6` reports Git source [`ab68f62`](https://github.com/Demigodd00/contrary/commit/ab68f62de1a5b8ba7a7aebf13f8098df843d99c4) on `main`. This confirms the deployed-site baseline, and the [GitHub comparison to the milestone branch](https://github.com/Demigodd00/contrary/compare/ab68f62de1a5b8ba7a7aebf13f8098df843d99c4...codex/contrary-regression-ledger) shows the new work. The Portal's accepted entry itself does not pin a rewarded SHA, so this is not a claim that the Portal independently certified that commit. The accepted Vercel project auto-deploys `main`; the milestone stays on a separate branch and Vercel project to avoid replacing v0.2 during review.
 
+On 15 October 2026, the connected browser wallet `0x8d74f33835a2301c3c19ee1079bee68885ed9c9c` created [test claim `CT-M2-WALLET-001`](https://contrary-milestone.vercel.app/?claim=CT-M2-WALLET-001) through the milestone site. The [0-GEN transaction](https://explorer-studio.genlayer.com/tx/0x5ea601dcb01b52bfd52daed93658905d9b57ba7e406ffa0041ce94cb2cf768fe) is `FINALIZED / MAJORITY_AGREE / SUCCESS`; a direct on-chain read and the anonymous site show `PREPARED`, the correct sponsor, reward configuration, and frozen source hash. No reward was funded or locked and challenges are not open on that test claim. This verifies the browser sign-and-write path, not the full reward/challenge lifecycle through that particular browser wallet. The separate two-wallet proof above covers the live value lifecycle.
+
 ## Local and release gates
 
 - Local direct-mode tests cover partial and full fixes, sibling branches, prompt-injection comments, unsupported syntax, wrong Git parent, replay, timeout, and value accounting. These mocked tests are not live GenVM proof.
 - Verify the current v1.2 deployment source hash, pinned runner, ABI, chain 61999, and on-chain config. A compact `preview_pure_case` call confirms the restricted parser works in GenVM; larger string arguments to StudioNet's read-only `gen_call` currently hit an RLP encoding error, so the three full fixture files must be verified through the real pinned-source write path and on-chain revision readbacks instead.
 - The two-wallet StudioNet proof now covers `CLEARED`/`STILL_BREAKS` → `BLOCKED` and `CLEARED`/`CLEARED` → `KNOWN_CASES_CLEARED`, with finalized validator-agreed receipts and on-chain readbacks. It also covers the invalid-payable credit and credited withdrawal. One slow-claim review finalized `MAJORITY_DISAGREE`; the separate successful retry is recorded, not hidden.
-- Anonymous public read access now works through the site's same-origin StudioNet read route; browser wallets still sign through their own StudioNet provider. A real browser-wallet signature on the milestone site remains unverified. Keep the accepted v0.2 site intact.
+- Anonymous public read access works through the site's same-origin StudioNet read route; browser wallets sign through their own StudioNet provider. A real browser-wallet create-claim write finalized successfully. The wallet test deliberately stopped before funding. Keep the accepted v0.2 site intact.
 - The accepted site's production deployment confirms the comparison base. The Portal entry does not independently certify a rewarded SHA; cite the production baseline and this limitation explicitly.
 
 ## Reviewer path
@@ -38,4 +40,4 @@ The accepted v0.2 site's Vercel production deployment `dpl_3EDUEVjidvjJfnGCU6PiG
 4. Compare revision 2's two `CLEARED` checks and its `KNOWN_CASES_CLEARED` final state. The captured source shows `name != ""` on both branches. These are frozen-input outcomes, not universal bug-freedom.
 5. Open the proof manifest and run `pnpm verify:milestone` if desired; no wallet or key is needed. The manifest separates successful consensus, one validator disagreement, and credited outbound value transfers.
 
-No Portal milestone submission should be made before the remaining release gates are met.
+The owner may submit the milestone using [`PORTAL_MILESTONE_HANDOFF.md`](PORTAL_MILESTONE_HANDOFF.md) after confirming the final deployed site and evidence links. No Portal submission has been made by this repository work.

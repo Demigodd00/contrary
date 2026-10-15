@@ -1,6 +1,6 @@
 # Contrary milestone v1.2 — Portal handoff
 
-This is a **Milestone** on the accepted [Contrary by demigodd00](https://portal.genlayer.foundation/builders/explorer/contrary-by-demigodd00) project, not a second Project submission. Select that parent entry. The accepted v0.2 website remains unchanged; the milestone uses its own StudioNet contract and website. Submit only after the browser-wallet gate in [`MILESTONE_1.md`](MILESTONE_1.md) is complete. The human owner submits to the Portal.
+This is a **Milestone** on the accepted [Contrary by demigodd00](https://portal.genlayer.foundation/builders/explorer/contrary-by-demigodd00) project, not a second Project submission. Select that parent entry. The accepted v0.2 website remains unchanged; the milestone uses its own StudioNet contract and website. The browser-wallet write gate is documented in [`MILESTONE_1.md`](MILESTONE_1.md). The human owner submits to the Portal.
 
 ## Copy into the milestone form
 
@@ -30,5 +30,6 @@ Use the parent project's existing GitHub repository entry. Add these milestone-s
 5. [Live proof manifest](https://github.com/Demigodd00/contrary/blob/codex/contrary-regression-ledger/deployments/contrary_milestone_v12_proof.json)
 6. [Blocked partial revision transaction](https://explorer-studio.genlayer.com/tx/0xd1505236dc30c71ed45a1953ca248e7cc71fa98bcee0339afcd0f0ecd853c87b)
 7. [Known-cases-cleared revision transaction](https://explorer-studio.genlayer.com/tx/0x45053fb6ec95c3b63c7672e6dd13d8ade5168284549e353fbbed14dd3fe84688)
+8. [Browser-wallet create-claim transaction, 0 GEN sent](https://explorer-studio.genlayer.com/tx/0x5ea601dcb01b52bfd52daed93658905d9b57ba7e406ffa0041ce94cb2cf768fe) and [anonymous claim readback](https://contrary-milestone.vercel.app/?claim=CT-M2-WALLET-001). This test claim is unfunded; do not describe its reward as locked.
 
 The proof manifest also records the one `MAJORITY_DISAGREE` pilot review and its distinct successful retry. Do not describe the failed consensus transaction as a successful proof. `pnpm verify:milestone` rechecks the pinned source, receipts, and on-chain state read-only.
