@@ -122,6 +122,7 @@ else if(command==='challenge'){
  await send('challenger','submit_counterexample',[claimId,`allowed("", "${mode}")`,'False','True',`The ${mode} branch returns True for an empty string in the frozen source.`],10n**15n,'challenge:'+claimId);
 }
 else if(command==='review')await send('observer','review_counterexample',[id(args[0],'CT')],0n,'review:'+args[0]);
+else if(command==='retry-review')await send('observer','review_counterexample',[id(args[0],'CT')],0n,'retry-review:'+args[0]);
 else if(command==='finalize')await send('observer','finalize',[id(args[0],'CT')],0n,'finalize:'+args[0]);
 else if(command==='close')await send('observer','close_expired',[id(args[0],'CT')],0n,'close:'+args[0]);
 else if(command==='lineage')await send('sponsor','create_lineage',[id(args[0],'CL'),id(args[1],'CT')],0n,'lineage:'+args[0]);
@@ -150,6 +151,17 @@ else if(command==='claim')await read('get_claim',[id(args[0],'CT')]);
 else if(command==='attempts')await read('get_attempts',[id(args[0],'CT'),0,20]);
 else if(command==='lineage-read')await read('get_lineage',[id(args[0],'CL')]);
 else if(command==='revision-read')await read('get_revision',[id(args[0],'CL'),Number(args[1])]);
+else if(command==='preview'){
+ const [commit,sample]=args;sha(commit);
+ const snippet=execFileSync('git',['show',commit+':examples/lineage_fixture.py'],{cwd:root,encoding:'utf8'});
+ await read('preview_pure_case',[snippet,sample]);
+}
+else if(command==='preview-basic')await read('preview_pure_case',['def f(x):\n    return x == ""\n','f("")']);
+else if(command==='preview-size'){
+ const size=Number(args[0]);if(!Number.isInteger(size)||size<30||size>800)throw Error('Size 30..800 required');
+ const prefix='def f(x):\n    return x == ""\n';
+ await read('preview_pure_case',[prefix+'#'+'x'.repeat(Math.max(0,size-prefix.length-1)),'f("")']);
+}
 else if(command==='accounting'){
  const values={};for(const role of (args.length?args:Object.keys(accounts))){if(!accounts[role])throw Error('Unknown test role');values[role]=await clients.sponsor.readContract({address:state.contract.address,functionName:'get_accounting',args:[accounts[role]],transactionHashVariant:TransactionHashVariant.LATEST_FINAL});}show(values);
 }

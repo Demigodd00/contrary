@@ -8,6 +8,7 @@
     "dev": "vite --host 127.0.0.1 --port 5192",
     "build": "tsc -b && vite build",
     "build:milestone": "pnpm build && node scripts/prepare-milestone-dist.mjs",
+    "verify:milestone": "node scripts/verify-milestone-proof.mjs",
     "test": "vitest run",
     "preview": "vite preview --host 127.0.0.1 --port 5193"
   },

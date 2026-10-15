@@ -1,6 +1,6 @@
 # Contrary milestone — Versioned Counterexample Ledger
 
-Status: v1.2 is implemented locally and **not yet submitted**. The accepted v0.2 site and contract remain unchanged. The v1.0 and v1.1 StudioNet pilots were abandoned; see the factual records in [`deployments/history`](../deployments/history). In particular, v1.1's LLM-based revision check reached validator disagreement and then incorrectly marked a repaired empty-string case as still broken. Do not cite that pilot as a successful milestone. Its separate preview is access-protected until a corrected release passes live checks.
+Status: v1.2 has passed its core StudioNet live demonstration and is **not yet submitted**. The accepted v0.2 site and contract remain unchanged. The v1.0 and v1.1 StudioNet pilots were abandoned; see the factual records in [`deployments/history`](../deployments/history). In particular, v1.1's LLM-based revision check reached validator disagreement and then incorrectly marked a repaired empty-string case as still broken. Do not cite that pilot as a successful milestone. The separate v1.2 website and browser-wallet check are release gates, distinct from the on-chain proof.
 
 ## What is new
 
@@ -14,12 +14,28 @@ Each witness must be checked. If every witness is `CLEARED`, the revision become
 
 `KNOWN_CASES_CLEARED` means only that all previously proven frozen inputs in this ledger evaluate to the expected boolean under the restricted interpreter for that *specific* revision. It does not establish a universal fix, general Python execution, correct imports, absence of other defects, or a security audit. Unsupported code fails closed as `UNCLEAR`. Original claim adjudication still uses an LLM and remains subject to semantic errors despite source quotes and consensus. The v1.2 contract starts with fresh storage; it cannot import v0.2 or v1.1 claims.
 
-## Local and live gates
+## Live StudioNet result
+
+The canonical v1.2 deployment is [`0x43Fac855E00DA2c749dCB48fEC514753B0a43fAa`](https://explorer-studio.genlayer.com/address/0x43Fac855E00DA2c749dCB48fEC514753B0a43fAa), deployed from pushed source commit `3958800b1a8fc74d44527254d33be9a23db09525`. The on-chain source SHA-256 equals `9ebad48ac005ee9d5df508245118348e52e223298c6edc784cd6e9867afec457`. The [proof manifest](../deployments/contrary_milestone_v12_proof.json) contains the transaction hashes, runner, source identity, unexpected validator disagreement on the first slow-claim review, state readbacks, and withdrawal record. Run `pnpm verify:milestone` to independently recheck it read-only.
+
+Two claims using the same pinned 309-byte source became finalized `PROVEN` witnesses. In ledger `CL-M2-EMPTY-001`, the [partial direct-child commit](https://github.com/Demigodd00/contrary/commit/a92a7f58b7e5645273fee4b63772f86c153c5be1) cleared only the fast branch; the slow branch still broke the claim. GenLayer finalized its revision as `BLOCKED` ([transaction](https://explorer-studio.genlayer.com/tx/0xd1505236dc30c71ed45a1953ca248e7cc71fa98bcee0339afcd0f0ecd853c87b)). The [next direct-child commit](https://github.com/Demigodd00/contrary/commit/78e3002567cf91206f586eb63f7ac2a652630e94) cleared both frozen inputs and finalized `KNOWN_CASES_CLEARED` ([transaction](https://explorer-studio.genlayer.com/tx/0x45053fb6ec95c3b63c7672e6dd13d8ade5168284549e353fbbed14dd3fe84688)). The challenger separately withdrew 0.022 simulated GEN; the child value transfer finalized and is marked credited. No real-value claim is made.
+
+The last v0.2 commit before the Portal acceptance date appears to be [`ab68f62`](https://github.com/Demigodd00/contrary/commit/ab68f62de1a5b8ba7a7aebf13f8098df843d99c4), based on local Oct 1 history. The [comparison to the v1.2 source commit](https://github.com/Demigodd00/contrary/compare/ab68f62de1a5b8ba7a7aebf13f8098df843d99c4...3958800b1a8fc74d44527254d33be9a23db09525) is exact Git history, but the **rewarded baseline is inferred**, not independently pinned by the Portal entry, which linked moving `main`.
+
+## Local and release gates
 
 - Local direct-mode tests cover partial and full fixes, sibling branches, prompt-injection comments, unsupported syntax, wrong Git parent, replay, timeout, and value accounting. These mocked tests are not live GenVM proof.
-- Verify the current v1.2 deployment source hash, pinned runner, ABI, chain 61999, on-chain config, and `preview_pure_case` against the three public fixture commits before funding claims.
-- On StudioNet, prove two frozen inputs with two disposable wallets; finalize both after the 10-minute rebuttal window. Show the partial child as `CLEARED`/`STILL_BREAKS` and `BLOCKED`, then the complete child as `CLEARED`/`CLEARED` and `KNOWN_CASES_CLEARED`. Record actual transaction consensus results and on-chain readbacks, not leader receipts alone.
-- Test invalid payable input and its successful credited withdrawal, a real browser-wallet signature on the separate milestone site, and anonymous public read access. Keep the accepted v0.2 site intact.
-- Confirm the exact last rewarded Project/Milestone commit from the Portal and supply a GitHub comparison from it to the release SHA. Local history alone is not proof of that baseline. Add final reviewer instructions and evidence links only after all live checks pass.
+- Verify the current v1.2 deployment source hash, pinned runner, ABI, chain 61999, and on-chain config. A compact `preview_pure_case` call confirms the restricted parser works in GenVM; larger string arguments to StudioNet's read-only `gen_call` currently hit an RLP encoding error, so the three full fixture files must be verified through the real pinned-source write path and on-chain revision readbacks instead.
+- The two-wallet StudioNet proof now covers `CLEARED`/`STILL_BREAKS` → `BLOCKED` and `CLEARED`/`CLEARED` → `KNOWN_CASES_CLEARED`, with finalized validator-agreed receipts and on-chain readbacks. It also covers the invalid-payable credit and credited withdrawal. One slow-claim review finalized `MAJORITY_DISAGREE`; the separate successful retry is recorded, not hidden.
+- Still verify a real browser-wallet signature on the separate milestone site and anonymous public read access. Keep the accepted v0.2 site intact.
+- The exact last rewarded Project/Milestone commit remains unconfirmed by the Portal. Use the inferred comparison above with its caveat, or supply a pinned rewarded SHA if one exists.
 
-No Portal milestone submission should be made before those gates are met.
+## Reviewer path
+
+1. Open the separate milestone site and select **Versioned ledger**. Open `CL-M2-EMPTY-001` without connecting a wallet.
+2. Confirm it lists both proven claims as immutable witnesses and two revisions with full GitHub commit links and captured source hashes.
+3. Compare revision 1's `fast` `CLEARED` to `slow` `STILL_BREAKS`, then its `BLOCKED` final state. The slow-source quote still returns `name == ""`.
+4. Compare revision 2's two `CLEARED` checks and its `KNOWN_CASES_CLEARED` final state. The captured source shows `name != ""` on both branches. These are frozen-input outcomes, not universal bug-freedom.
+5. Open the proof manifest and run `pnpm verify:milestone` if desired; no wallet or key is needed. The manifest separates successful consensus, one validator disagreement, and credited outbound value transfers.
+
+No Portal milestone submission should be made before the remaining release gates are met.

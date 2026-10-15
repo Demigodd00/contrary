@@ -1,0 +1,85 @@
+{
+  "network": "StudioNet",
+  "chainId": 61999,
+  "version": "contrary.v1.2.0",
+  "contract": "0x43Fac855E00DA2c749dCB48fEC514753B0a43fAa",
+  "sourceCommit": "3958800b1a8fc74d44527254d33be9a23db09525",
+  "sourceGitBlob": "9b6453f2d6ea93d8b6878547e2ed6d64858858c4",
+  "sourceSha256": "9ebad48ac005ee9d5df508245118348e52e223298c6edc784cd6e9867afec457",
+  "runner": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
+  "constructorArgs": [],
+  "toolchain": {
+    "genlayerJs": "1.1.8",
+    "node": "24.19.0"
+  },
+  "acceptanceBaseline": {
+    "commit": "ab68f62de1a5b8ba7a7aebf13f8098df843d99c4",
+    "confidence": "inferred from latest Oct 1 local history; Portal v0.2 evidence points to moving main and does not pin rewarded SHA"
+  },
+  "claims": ["CT-M2-FAST-001", "CT-M2-SLOW-001"],
+  "lineage": "CL-M2-EMPTY-001",
+  "fixture": {
+    "baseCommit": "57e832e2c59a39fcce559f2282cade541cf7d9cb",
+    "partialCommit": "a92a7f58b7e5645273fee4b63772f86c153c5be1",
+    "fullCommit": "78e3002567cf91206f586eb63f7ac2a652630e94",
+    "path": "examples/lineage_fixture.py"
+  },
+  "transactionRule": "IC state change counts only when status is FINALIZED, consensus is MAJORITY_AGREE, and leader execution is SUCCESS. Outbound value transfers are checked separately for FINALIZED and valueCredited true.",
+  "transactions": {
+    "deploy": "0x3bc8eb09ce392791c1441baaad34af8765209182784ad2c31a697cb6cd603e2f",
+    "createFast": "0x3321d8193649050c848aafc9ed9dd08f3f4a478f9f6b8734ed700edd5ec802e7",
+    "fundFast": "0x20ad376a266d6f6c188bd20bcfebd3f825cc1fe462fe8ad5cc5b2eff9eb22526",
+    "createSlow": "0x1e17364258290d112b3f124f2b121bb07b0b41d959754fd8e932d7336eeada16",
+    "challengeFast": "0x9ac4fafe9c5380e1f051df8accac08c417f2619560ab4ece8c0e8b164fad5308",
+    "fundSlow": "0xfb94e17cab2827bc870258c38308c7bcf1dee5a432b9e210e4926445427876e3",
+    "reviewFast": "0xc80a89c8d960d8f69240f6f35ccde9b72230880eff59731a48eb7cecaeca20ed",
+    "challengeSlow": "0x405f5b219ed01ae9cad94e00ec5b72a3c8453f7121162c53309c1dfac3b74a9f",
+    "reviewSlowDisagreed": "0xf888db6841e2471dbbd38db506594a4f938ae114658589c1f8ce1284e1b96586",
+    "invalidPayableRefundCredit": "0x2cfd4e15f615ed11270037215fd83cc30abb512f0fff7120b92ffa2c5a33e13d",
+    "withdrawSponsorWei": "0x4116e747788d1dd29272317fe7c652135a85bfe67741761e7b8f28bfb3362c94",
+    "sponsorWeiTransfer": "0x7954f15e4df0bf548df68f8f25736a962497261da186e1b9ba889ebcbc7b8cce",
+    "reviewSlowRetry": "0xbebdf825ecb844c67449507949ed4dd1cd33a73fbbe6b346cfecd25ee0d8d047",
+    "finalizeFast": "0x3bd46df4edd25438334c82d5c91d78bd374115819a82d1151ca0f75dec8a82db",
+    "createLineage": "0x8c98ca59266643c79aeed263b2a62c5f5444c548e137b0f5b92f7ec99d85fc47",
+    "finalizeSlow": "0xf46742956f8901fd20c98951579becb25fd1ed0eb4183419de3ca8192780d006",
+    "addSlowWitness": "0x6d66719dfddbdc4844b8e03c613c10449a057eb94cc89797e4f0cf7e9137e184",
+    "proposePartial": "0x5cd07c1bb27c00bbee6f15ba93514e3b1dd4844f15f4f889c5c031168fe659b8",
+    "checkPartialFast": "0xbcbfaa9315b4291c36ffab0a314a1017c027d968f7b263832f905b396347abbc",
+    "checkPartialSlow": "0x1081dcf849fbc03242adb9ecee2804fbb193b4bca1edd6c656da05649a01f95e",
+    "finalizePartial": "0xd1505236dc30c71ed45a1953ca248e7cc71fa98bcee0339afcd0f0ecd853c87b",
+    "proposeFull": "0x0f00e5768d788f68f33157e40316ab0826ccf909cd2bdd10d0b99bc5c65cdf88",
+    "checkFullFast": "0xdc723f6d1ab8a14e97ab164f1e517b8246e2b13b4b881da6721bb305e2233a5c",
+    "checkFullSlow": "0x3ffb9dffc3c8f86a955d899a3efb8f6e7e2ba4726d57eaf59d87ffb4f238815d",
+    "finalizeFull": "0x45053fb6ec95c3b63c7672e6dd13d8ade5168284549e353fbbed14dd3fe84688",
+    "withdrawChallenger": "0x112f6c6c73b337d0c6c80a12b2d51ed35380dd22d59e2da7a532eeb443b46ca6",
+    "challengerTransfer": "0xf8b40481617ff9c2f3f2cafbb37dc17821629fe74661ead26561d2ddc99a897f"
+  },
+  "observedExceptions": {
+    "reviewSlowDisagreed": "FINALIZED MAJORITY_DISAGREE; no state change. A separate retry later finalized MAJORITY_AGREE and stored PROVEN.",
+    "rateLimit": "StudioNet rejected the first partial-fast check submission with 500/hour and no transaction hash. The saved check was submitted after cooldown.",
+    "outboundTransfers": "Child EVM value transfers have NO_MAJORITY rather than an IC leader result; both were FINALIZED with valueCredited true. Do not label them IC consensus successes.",
+    "readOnlyEncoding": "A full 309-byte source passed pinned-source writes but preview_pure_case via gen_call raised an RLP encoding error for large string arguments. The preview view is diagnostic, not used by the app."
+  },
+  "finalReadback": {
+    "partial": {
+      "commit": "a92a7f58b7e5645273fee4b63772f86c153c5be1",
+      "status": "BLOCKED",
+      "checks": ["CLEARED", "STILL_BREAKS"],
+      "lines": [9, 11]
+    },
+    "full": {
+      "commit": "78e3002567cf91206f586eb63f7ac2a652630e94",
+      "parentIndex": 0,
+      "status": "KNOWN_CASES_CLEARED",
+      "checks": ["CLEARED", "CLEARED"],
+      "lines": [9, 11]
+    },
+    "challengerAccounting": {
+      "claimable": "0",
+      "credited": "0",
+      "locked": "0",
+      "withdrawn": "22000000000000001"
+    }
+  },
+  "limits": "The verdict covers two frozen inputs under a restricted side-effect-free Python subset, not arbitrary Python or absence of other bugs. Original claim adjudication remains AI-based. StudioNet GEN has no monetary value."
+}

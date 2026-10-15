@@ -1,0 +1,25 @@
+{
+  "network": "StudioNet",
+  "chainId": 61999,
+  "version": "contrary.v1.2.0",
+  "address": "0x43Fac855E00DA2c749dCB48fEC514753B0a43fAa",
+  "deployTransaction": "0x3bc8eb09ce392791c1441baaad34af8765209182784ad2c31a697cb6cd603e2f",
+  "deployStatus": "FINALIZED",
+  "consensusResult": "MAJORITY_AGREE",
+  "executionResult": "SUCCESS",
+  "sourceCommit": "3958800b1a8fc74d44527254d33be9a23db09525",
+  "sourceSha256": "9ebad48ac005ee9d5df508245118348e52e223298c6edc784cd6e9867afec457",
+  "onchainSourceHashMatched": true,
+  "configReadback": {
+    "admin": null,
+    "attempt_page_limit": 50,
+    "fee_bps": 0,
+    "max_lineage_witnesses": 4,
+    "max_source_bytes": 12000,
+    "network_scope": "StudioNet simulated GEN",
+    "review_window_seconds": 600,
+    "revision_check_window_seconds": 86400,
+    "version": "contrary.v1.2.0"
+  },
+  "scope": "StudioNet simulated GEN only; live milestone workflow still under verification."
+}
